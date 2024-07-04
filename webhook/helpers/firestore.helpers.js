@@ -1,8 +1,8 @@
 const { v4: uuidv4 } = require("uuid");
-const { Timestamp } = require("firebase-admin/firestore");
+
 async function createNewFlow(db, flowData) {
   const flowId = uuidv4();
-  const startTime = Timestamp.fromDate(Date.now());
+  const startTime = new Date().toISOString();
   const { flow, userInfo } = flowData;
   const userId = userInfo.WaId;
   const data = {
@@ -16,7 +16,7 @@ async function createNewFlow(db, flowData) {
 async function getCurrentFlow(db, userData) {
   const userId = userData.WaId;
   const flowRef = db.collection("flows").where("userId", "==", userId).get();
-  console.log(flowRef);
+  console.log("flowRef", flowRef);
 }
 
 module.exports = {

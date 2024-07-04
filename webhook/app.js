@@ -1,10 +1,10 @@
 // require("dotenv").config();
 const express = require("express");
-const path = require("path");
 const cookieParser = require("cookie-parser");
 const logger = require("morgan");
 const { mongoClient } = require("./config/mongodb.config");
 const indexRouter = require("./routes/index");
+const webhookRouter = require("./routes/webhook");
 
 const app = express();
 mongoClient
@@ -22,5 +22,5 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
 app.use("/", indexRouter);
-
+app.use("/webhook", webhookRouter);
 module.exports = app;

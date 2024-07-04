@@ -1,13 +1,15 @@
 const express = require("express");
 const router = express.Router();
 
-router.post("/", (req, res, next) => {
+router.post("/:flowName", (req, res, next) => {
   try {
-    const { message } = req.body;
-    const flow = req.query;
-    console.log(flow, message);
+    const { userInfo, message } = req.body;
+    const flow = req.params.flowName;
+    console.log(flow, userInfo);
     res.status(200).send({
-      message: message + "recieved!",
+      status: "data Recieved",
+      flow,
+      data: message,
     });
   } catch (err) {
     res.status(500).send(err);
