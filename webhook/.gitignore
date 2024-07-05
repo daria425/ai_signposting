@@ -1,3 +1,4 @@
 .env
 testMessages.json
 node_modules/
+testUser.json
