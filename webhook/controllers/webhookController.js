@@ -24,7 +24,7 @@ async function handleMessage(req, res, next) {
       message: body,
       flowStep: 1,
     };
-    if (!registeredUser) {
+    if (!registeredUser || body.Body === "test") {
       //first check, any message where the user is not registered gets forwarded to the onboarding flow
       await saveUser(mongoClient, userData);
       await createNewFlow(firestore, {
@@ -43,7 +43,7 @@ async function handleMessage(req, res, next) {
     } else {
       //check if a an active flow exists
       const currentFlow = await getCurrentFlow(firestore, userData);
-      messageData.flowStep = currentFlow.flowStep + 1;
+      messageData.flowStep = currentFlow.flowStep + 1; //TO-DO: handle error here
       const flowName = currentFlow.flowName;
       const response = await axios({
         headers: {
