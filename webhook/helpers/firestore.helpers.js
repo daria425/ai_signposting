@@ -29,11 +29,18 @@ async function getCurrentFlow(db, userData) {
       .collection("flows")
       .doc(updateId)
       .update({ "flowStep": currentStep + 1 });
+    data.id = updateId; //add the id to the doc so that we can delete it by id later
     return data;
   }
+}
+
+async function deleteFlowOnCompletion(db, flowId) {
+  await db.collection("flows").doc(flowId).delete();
+  console.log(`flow ${flowId} completed and deleted successfully`);
 }
 
 module.exports = {
   createNewFlow,
   getCurrentFlow,
+  deleteFlowOnCompletion,
 };

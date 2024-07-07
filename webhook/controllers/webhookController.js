@@ -1,6 +1,7 @@
 const {
   createNewFlow,
   getCurrentFlow,
+  deleteFlowOnCompletion,
 } = require("../helpers/firestore.helpers");
 const { api_base } = require("../config/api_base.config");
 const axios = require("axios");
@@ -40,11 +41,26 @@ async function handleMessage(req, res, next) {
         data: messageData,
       });
       res.status(200).send(response.data);
+    } else if (body.Body.toLowerCase() === "hi") {
+      await createNewFlow(firestore, {
+        ...messageData,
+        flowName: "signposting",
+      });
+      const response = await axios({
+        headers: {
+          "Content-Type": "application/json",
+        },
+        method: "post",
+        url: `${api_base}flows/signposting`,
+        data: messageData,
+      });
+      res.status(200).send(response.data);
     } else {
       //check if a an active flow exists
       const currentFlow = await getCurrentFlow(firestore, userData);
       messageData.flowStep = currentFlow.flowStep + 1; //TO-DO: handle error here
       const flowName = currentFlow.flowName;
+      const flowId = currentFlow.id;
       const response = await axios({
         headers: {
           "Content-Type": "application/json",
@@ -53,6 +69,10 @@ async function handleMessage(req, res, next) {
         url: `${api_base}flows/${flowName}`,
         data: messageData,
       });
+      const flowCompletionStatus = response.data.flowCompletionStatus;
+      if (flowCompletionStatus) {
+        await deleteFlowOnCompletion(firestore, flowId);
+      }
       res.status(200).send(response.data);
     }
   } catch (err) {

@@ -20,6 +20,7 @@ class OnboardingFlow {
   }
 
   async handleFlowStep(flowStep) {
+    let flowCompletionStatus = false;
     if (flowStep != 5) {
       const text = this.onboardingTexts[flowStep] || "flow complete";
       const message = createTextMessage(this.waId, text);
@@ -35,6 +36,7 @@ class OnboardingFlow {
           "completed_onboarding": true,
           "opted_in": true,
         });
+        flowCompletionStatus = true;
       }
 
       await sendMessage(message);
@@ -44,6 +46,7 @@ class OnboardingFlow {
       await this.updateUser({ "postcode": this.messageContent });
       await sendMessage(templateMessage);
     }
+    return flowCompletionStatus;
   }
 
   async updateUser(updateData) {
