@@ -1,8 +1,23 @@
-const { OnboardingFlow } = require("../services/OnboardingFlow");
+const { OnboardingFlow, SignpostingFlow } = require("../services/Flows");
 
 async function runOnboardingFlow(userInfo, flowStep, userMessage, mongoClient) {
   const onboardingFlow = new OnboardingFlow(userInfo, userMessage, mongoClient);
   const flowCompletionStatus = await onboardingFlow.handleFlowStep(flowStep);
+  return flowCompletionStatus;
+}
+
+async function runSignpostingFlow(
+  userInfo,
+  flowStep,
+  userMessage,
+  mongoClient
+) {
+  const signpostingFlow = new SignpostingFlow(
+    userInfo,
+    userMessage,
+    mongoClient
+  );
+  const flowCompletionStatus = await signpostingFlow.handleFlowStep(flowStep);
   return flowCompletionStatus;
 }
 async function flowController(req, res, next) {
@@ -19,6 +34,13 @@ async function flowController(req, res, next) {
     });
     if (flow === "onboarding") {
       flowCompletionStatus = await runOnboardingFlow(
+        userInfo,
+        flowStep,
+        message,
+        mongoClient
+      );
+    } else if (flow === "signposting") {
+      flowCompletionStatus = await runSignpostingFlow(
         userInfo,
         flowStep,
         message,
