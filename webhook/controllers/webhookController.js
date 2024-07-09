@@ -2,6 +2,7 @@ const {
   createNewFlow,
   getCurrentFlow,
   deleteFlowOnCompletion,
+  updateUserSelection,
 } = require("../helpers/firestore.helpers");
 const { api_base } = require("../config/api_base.config");
 const axios = require("axios");
@@ -42,10 +43,18 @@ async function handleMessage(req, res, next) {
       });
       res.status(200).send(response.data);
     } else if (body.Body.toLowerCase() === "hi") {
-      await createNewFlow(firestore, {
-        ...messageData,
-        flowName: "signposting",
-      });
+      await createNewFlow(
+        firestore,
+        {
+          ...messageData,
+          flowName: "signposting",
+        },
+        {
+          userSelection: {
+            page: 1,
+          },
+        }
+      );
       const response = await axios({
         headers: {
           "Content-Type": "application/json",
@@ -58,9 +67,25 @@ async function handleMessage(req, res, next) {
     } else {
       //check if a an active flow exists
       const currentFlow = await getCurrentFlow(firestore, userData);
-      messageData.flowStep = currentFlow.flowStep + 1; //TO-DO: handle error here
+      const currentFlowStep = currentFlow.flowStep;
+      messageData.flowStep = currentFlowStep + 1; //TO-DO: handle error here
       const flowName = currentFlow.flowName;
       const flowId = currentFlow.id;
+      if (flowName === "signposting") {
+        const updatedDoc = await updateUserSelection(
+          firestore,
+          flowId,
+          currentFlowStep,
+          body.Body
+        );
+        messageData.userSelection = updatedDoc?.userSelection;
+      }
+      console.log(
+        "message to be sent",
+        messageData,
+        "current flow",
+        currentFlow
+      );
       const response = await axios({
         headers: {
           "Content-Type": "application/json",
@@ -77,7 +102,7 @@ async function handleMessage(req, res, next) {
     }
   } catch (err) {
     console.log(err);
-    res.status(500).send("An error occurred", err);
+    res.status(500).send(err);
   }
 }
 

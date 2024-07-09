@@ -17,15 +17,16 @@ async function listTemplates() {
 async function findTemplateSid(templateName, convertTemplate = true) {
   try {
     const templates = await listTemplates();
-    const foundTemplate = templates.contents.find((template) =>
-      convertTemplate
-        ? template.friendly_name === convertTemplateName(templateName)
-        : template.friendly_name === templateName
+    const searchableTemplateName = convertTemplate
+      ? convertTemplateName(templateName)
+      : templateName;
+
+    const foundTemplate = templates.contents.find(
+      (template) => template.friendly_name === searchableTemplateName
     );
     if (foundTemplate) {
+      console.log("template sid", foundTemplate.sid);
       return foundTemplate.sid;
-    } else {
-      throw new Error("Template not found");
     }
   } catch (err) {
     console.log(err);

@@ -14,7 +14,6 @@ function convertTemplateName(templateName) {
 
   // Remove any trailing underscores
   result = result.replace(/_+$/, "");
-  console.log(result);
   return result;
 }
 

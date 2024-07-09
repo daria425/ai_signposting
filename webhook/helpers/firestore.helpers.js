@@ -1,6 +1,6 @@
 const { v4: uuidv4 } = require("uuid");
 
-async function createNewFlow(db, flowData) {
+async function createNewFlow(db, flowData, additionalProps = {}) {
   const flowId = uuidv4();
   const startTime = new Date().toISOString();
   const { flowName, userInfo, flowStep } = flowData;
@@ -10,6 +10,7 @@ async function createNewFlow(db, flowData) {
     flowName,
     userId,
     flowStep,
+    ...additionalProps,
   };
   await db.collection("flows").doc(flowId).set(data);
 }
@@ -21,7 +22,7 @@ async function getCurrentFlow(db, userData) {
     .where("userId", "==", userId)
     .get();
   if (!currentFlowSnapshot.empty) {
-    const firstDoc = currentFlowSnapshot.docs[0];
+    const firstDoc = currentFlowSnapshot.docs[0]; //TO-DO: get the most recent flow here
     const data = firstDoc.data();
     const updateId = firstDoc.id;
     const currentStep = data.flowStep;
@@ -39,8 +40,34 @@ async function deleteFlowOnCompletion(db, flowId) {
   console.log(`flow ${flowId} completed and deleted successfully`);
 }
 
+async function updateUserSelection(db, flowId, flowStep, selectionValue) {
+  const selectionNames = {
+    2: "category",
+    3: "location",
+  };
+  const flowRef = db.collection("flows").doc(flowId);
+  if (!selectionNames[flowStep]) {
+    console.log("update not needed");
+    return;
+  }
+  await flowRef.update({
+    [`userSelection.${selectionNames[flowStep]}`]: selectionValue,
+  });
+  console.log(
+    `Document property update with values: ${selectionNames[flowStep]} : ${selectionValue}`
+  );
+  const updatedDoc = await flowRef.get();
+
+  if (updatedDoc.exists) {
+    return updatedDoc.data(); // Return the data of the updated document
+  } else {
+    console.log("No such document!");
+    return null; // Return null if the document does not exist
+  }
+}
 module.exports = {
   createNewFlow,
   getCurrentFlow,
   deleteFlowOnCompletion,
+  updateUserSelection,
 };

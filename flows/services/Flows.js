@@ -14,8 +14,8 @@ class BaseFlow {
   }
 }
 class OnboardingFlow extends BaseFlow {
-  constructor(userInfo, userMessage) {
-    super(userInfo, userMessage);
+  constructor(db, userInfo, userMessage) {
+    super(db, userInfo, userMessage);
     this.onboardingTexts = {
       1: `Hello!\n\nWelcome to Alix Signposting.\n\nAlix signposts you to local and national help, starting in the region of Cornwall. You can find out more at https://www.projectalix.com/Cornwall\n\nLet's get started:\nPlease enter 'next' to continue.`,
       2: `Step 1 of 4: To begin, what is your name?`, // update name
@@ -62,8 +62,8 @@ class OnboardingFlow extends BaseFlow {
 }
 
 class SignpostingFlow extends BaseFlow {
-  constructor(userInfo, userMessage) {
-    super(userInfo, userMessage);
+  constructor(db, userInfo, userMessage) {
+    super(db, userInfo, userMessage);
     this.signpostingTemplates = {};
   }
   async init() {
@@ -75,7 +75,7 @@ class SignpostingFlow extends BaseFlow {
       },
     };
     this.signpostingTemplates[2] = {
-      templateSid: await findTemplateSid(this.listId),
+      templateSid: await findTemplateSid(this.messageContent),
       templateVariables: {
         select_further_options:
           "Thank you, please select a further option from the below",
@@ -97,6 +97,7 @@ class SignpostingFlow extends BaseFlow {
       const templateSid = this.signpostingTemplates[flowStep]["templateSid"];
       const templateVariables =
         this.signpostingTemplates[flowStep]["templateVariables"];
+      console.log(templateSid);
       const template = createTemplateMessage(
         this.waId,
         templateSid,
