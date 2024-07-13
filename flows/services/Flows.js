@@ -4,8 +4,9 @@ const {
 } = require("../helpers/messages.helpers");
 const { formatTag } = require("../helpers/format.helpers");
 const { sendMessage } = require("../helpers/twilio.helpers");
-const { updateUser, selectOptions } = require("../helpers/database.helpers");
+const { updateUser } = require("../helpers/database.helpers");
 const { findTemplateSid } = require("../helpers/twilio_account.helpers");
+const { logMessageAsJson } = require("../helpers/logging.helpers");
 class BaseFlow {
   constructor(db, userInfo, userMessage) {
     this.db = db;
@@ -46,7 +47,6 @@ class OnboardingFlow extends BaseFlow {
         });
         flowCompletionStatus = true;
       }
-
       await sendMessage(message);
     } else {
       const templateSid = await findTemplateSid("select_language", false);
@@ -92,7 +92,7 @@ class SignpostingFlow extends BaseFlow {
     };
   }
 
-  async handleFlowStep(flowStep, userSelection) {
+  async handleFlowStep(flowStep, userSelection, supportOptionService) {
     console.log("user selection:", userSelection);
     let flowCompletionStatus = false;
     if (flowStep <= 3) {
@@ -118,12 +118,12 @@ class SignpostingFlow extends BaseFlow {
         const tag = formatTag(category);
         const pageSize = 5;
         const location_choice = location.toLowerCase();
-        const dbResult = await selectOptions(
-          this.db,
+        const dbResult = await supportOptionService.selectOptions(
           tag,
           location_choice,
           page,
-          pageSize
+          pageSize,
+          false
         );
         console.log("Final options", dbResult);
         const { result, remaining } = dbResult;
@@ -131,8 +131,14 @@ class SignpostingFlow extends BaseFlow {
         if (!moreOptionsAvailable) {
           flowCompletionStatus = true;
         }
+        //TO-DO call LLM here with language, postcode
         for (const [index, item] of result.entries()) {
           const messageContent = JSON.stringify(item);
+
+          await logMessageAsJson(
+            item,
+            "/home/vboxuser/repos/ai_signposting/ai_api/data/sample_option_messages.json"
+          );
           console.log("sending message:", messageContent);
           const message = createTextMessage(this.waId, messageContent);
           await sendMessage(message);

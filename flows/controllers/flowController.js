@@ -1,5 +1,5 @@
 const { OnboardingFlow, SignpostingFlow } = require("../services/Flows");
-
+const { SupportOptionService } = require("../services/SupportOptionService");
 async function runOnboardingFlow(db, userInfo, flowStep, userMessage) {
   const onboardingFlow = new OnboardingFlow(db, userInfo, userMessage);
   const flowCompletionStatus = await onboardingFlow.handleFlowStep(flowStep);
@@ -15,9 +15,11 @@ async function runSignpostingFlow(
 ) {
   console.log(userMessage);
   const signpostingFlow = new SignpostingFlow(db, userInfo, userMessage);
+  const supportOptionService = new SupportOptionService(db);
   const flowCompletionStatus = await signpostingFlow.handleFlowStep(
     flowStep,
-    userSelection
+    userSelection,
+    supportOptionService
   );
   return flowCompletionStatus;
 }

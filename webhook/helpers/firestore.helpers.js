@@ -1,6 +1,7 @@
 const { v4: uuidv4 } = require("uuid");
 const { FieldValue } = require("firebase-admin/firestore");
 async function createNewFlow(db, flowData, additionalProps = {}) {
+  // TO-DO check for existing flow here and remove if exists
   const flowId = uuidv4();
   const startTime = new Date().toISOString();
   const { flowName, userInfo, flowStep } = flowData;
