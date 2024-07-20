@@ -258,7 +258,7 @@ class EditDetailsFlow extends BaseFlow {
         const message = createTextMessage(this.waId, text);
         await sendMessage(message);
       } else {
-        const templateSid = await findTemplateSid("select_language", false);
+        const templateSid = await findTemplateSid("edit_language", false);
         const message = createTemplateMessage(this.waId, templateSid);
         await sendMessage(message);
       }
