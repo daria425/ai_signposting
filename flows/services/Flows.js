@@ -4,7 +4,7 @@ const {
 } = require("../helpers/messages.helpers");
 const { formatTag } = require("../helpers/format.helpers");
 const { sendMessage } = require("../helpers/twilio.helpers");
-const { updateUser } = require("../helpers/database.helpers");
+const { updateUser, getUserDetail } = require("../helpers/database.helpers");
 const { findTemplateSid } = require("../helpers/twilio_account.helpers");
 const { logMessageAsJson } = require("../helpers/logging.helpers");
 class BaseFlow {
@@ -223,7 +223,72 @@ class SignpostingFlow extends BaseFlow {
     return message;
   }
 }
+
+class EditDetailsFlow extends BaseFlow {
+  constructor(db, userInfo, userMessage) {
+    super(db, userInfo, userMessage);
+  }
+  async handleFlowStep(flowStep, userDetailUpdate) {
+    let flowCompletionStatus = false;
+    if (userDetailUpdate?.endFlow) {
+      flowCompletionStatus = true;
+      return flowCompletionStatus;
+    }
+    if (flowStep === 1 || flowStep === 4) {
+      const templateSid = await findTemplateSid("edit_details", false);
+      const templateVariables = {
+        "edit_details_text": "Which information would you like to edit?",
+      };
+      const templateMessage = createTemplateMessage(
+        this.waId,
+        templateSid,
+        templateVariables
+      );
+      await sendMessage(templateMessage);
+    } else if (flowStep === 2) {
+      const detailField = userDetailUpdate.detailField;
+      const currentValue = await getUserDetail(this.db, this.waId, detailField);
+      if (detailField !== "language") {
+        const texts = {
+          "username": `Your name is currently registered as ${currentValue}, what would you like to your name to be changed to?`,
+          "postcode": `Your postcode is currently registered as ${currentValue}, what would you like to your postcode to be changed to?`,
+          "organization": `Your organization is currently registered as ${currentValue}, what would you like to your organization to be changed to?`,
+        };
+        const text = texts[detailField];
+        const message = createTextMessage(this.waId, text);
+        await sendMessage(message);
+      } else {
+        const templateSid = await findTemplateSid("select_language", false);
+        const message = createTemplateMessage(this.waId, templateSid);
+        await sendMessage(message);
+      }
+    } else if (flowStep === 3) {
+      const { detailField, detailValue } = userDetailUpdate;
+      await this.updateUser({ [detailField]: detailValue });
+      const templateSid = await findTemplateSid("add_update");
+      const templateVariables = {
+        "update_success_text":
+          detailField === "username"
+            ? "Your name has been updated!"
+            : `Your ${detailField} has been updated!`,
+      };
+      const message = createTemplateMessage(
+        this.waId,
+        templateSid,
+        templateVariables
+      );
+      await sendMessage(message);
+    }
+
+    return flowCompletionStatus;
+  }
+  async updateUser(updateData) {
+    // Assuming updateUser function exists and updates the user in the database
+    await updateUser(this.db, this.waId, updateData);
+  }
+}
 module.exports = {
   OnboardingFlow,
   SignpostingFlow,
+  EditDetailsFlow,
 };

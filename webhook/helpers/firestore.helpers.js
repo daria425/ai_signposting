@@ -111,10 +111,50 @@ async function updateUserSelection(
     return null; // Return null if the document does not exist
   }
 }
+
+async function createUserDetailUpdate(
+  db,
+  flowId,
+  flowStep,
+  selectionValue,
+  addUpdateMessages
+) {
+  const runNextStep = !addUpdateMessages.includes(selectionValue);
+  const updateQueryFields = {
+    1: "detailField",
+    2: "detailValue",
+  };
+  const flowRef = db.collection("flows").doc(flowId);
+  if (selectionValue === addUpdateMessages[0]) {
+    await flowRef.update({
+      flowStep: 1,
+      userDetailUpdate: FieldValue.delete(),
+    });
+  }
+  if (selectionValue === addUpdateMessages[1]) {
+    await flowRef.update({
+      "userDetailUpdate.endFlow": true,
+    });
+  }
+  if (updateQueryFields[flowStep] && runNextStep) {
+    await flowRef.update({
+      [`userDetailUpdate.${updateQueryFields[flowStep]}`]: selectionValue,
+    });
+  }
+  const updatedDoc = await flowRef.get();
+
+  if (updatedDoc.exists) {
+    return updatedDoc.data(); // Return the data of the updated document
+  } else {
+    console.log("No such document!");
+    return null; // Return null if the document does not exist
+  }
+}
 module.exports = {
   createNewFlow,
   getCurrentFlow,
   deleteFlowOnCompletion,
   updateUserSelection,
   deleteFlowOnErr,
+  createUserDetailUpdate,
 };

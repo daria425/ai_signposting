@@ -4,6 +4,7 @@ const {
   deleteFlowOnCompletion,
   deleteFlowOnErr,
   updateUserSelection,
+  createUserDetailUpdate,
 } = require("../helpers/firestore.helpers");
 const { PostRequestService } = require("../services/PostRequestService");
 const { api_base } = require("../config/api_base.config");
@@ -17,6 +18,7 @@ async function handleMessage(req, res, next) {
   const profileName = body.ProfileName;
   console.log("recieved message", body);
   const seeMoreOptionMessages = ["See More Options", "That's great, thanks"];
+  const addUpdateMessages = ["Yes", "No thanks"];
   try {
     const registeredUser = await getUser(db, waId);
     const userData = registeredUser || {
@@ -60,6 +62,24 @@ async function handleMessage(req, res, next) {
         messageData
       );
       res.status(200).send(response.data);
+    } else if (body.Body.toLowerCase().trim() == "edit details") {
+      await createNewFlow(
+        firestore,
+        {
+          ...messageData,
+          flowName: "edit-details",
+        },
+        {
+          userDetailUpdate: {
+            endFlow: false,
+          },
+        }
+      );
+      const response = await postRequestService.make_request(
+        "flows/edit-details",
+        messageData
+      );
+      res.status(200).send(response.data);
     } else {
       //check if a an active flow exists
       const currentFlow = await getCurrentFlow(firestore, userData);
@@ -80,6 +100,16 @@ async function handleMessage(req, res, next) {
           seeMoreOptionMessages
         );
         messageData.userSelection = updatedDoc?.userSelection;
+      }
+      if (flowName === "edit-details") {
+        const updatedDoc = await createUserDetailUpdate(
+          firestore,
+          flowId,
+          currentFlowStep,
+          body.Body,
+          addUpdateMessages
+        );
+        messageData.userDetailUpdate = updatedDoc?.userDetailUpdate;
       }
       console.log("message to be sent", messageData);
       const response = await postRequestService.make_request(

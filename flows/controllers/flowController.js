@@ -1,4 +1,8 @@
-const { OnboardingFlow, SignpostingFlow } = require("../services/Flows");
+const {
+  OnboardingFlow,
+  SignpostingFlow,
+  EditDetailsFlow,
+} = require("../services/Flows");
 const { SupportOptionService } = require("../services/SupportOptionService");
 const { api_base } = require("../config/llm_api.config");
 const { LLMService } = require("../services/LLMService");
@@ -23,6 +27,21 @@ async function runSignpostingFlow(
     userSelection,
     supportOptionService,
     llmService
+  );
+  return flowCompletionStatus;
+}
+
+async function runEditDetailsFlow(
+  db,
+  userInfo,
+  flowStep,
+  userMessage,
+  userDetailUpdate
+) {
+  const editDetailsFlow = new EditDetailsFlow(db, userInfo, userMessage);
+  const flowCompletionStatus = await editDetailsFlow.handleFlowStep(
+    flowStep,
+    userDetailUpdate
   );
   return flowCompletionStatus;
 }
@@ -53,6 +72,15 @@ async function flowController(req, res, next) {
         flowStep,
         message,
         userSelection
+      );
+    } else if (flow === "edit-details") {
+      const userDetailUpdate = req.body?.userDetailUpdate;
+      flowCompletionStatus = await runEditDetailsFlow(
+        db,
+        userInfo,
+        flowStep,
+        message,
+        userDetailUpdate
       );
     }
     res.status(200).send({ flowCompletionStatus });

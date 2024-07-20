@@ -24,6 +24,12 @@ async function getUser(db, recipient) {
   }
 }
 
+async function getUserDetail(db, recipient, detailField) {
+  const collection = db.collection("users");
+  const user = await collection.findOne({ "WaId": recipient });
+  return user[detailField];
+}
+
 async function updateUser(db, recipient, update) {
   try {
     const collection = db.collection("users");
@@ -37,6 +43,7 @@ async function updateUser(db, recipient, update) {
 }
 
 module.exports = {
+  getUserDetail,
   getUser,
   saveUser,
   updateUser,
