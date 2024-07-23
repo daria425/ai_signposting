@@ -264,7 +264,7 @@ class EditDetailsFlow extends BaseFlow {
     } else if (flowStep === 2) {
       const detailField = userDetailUpdate.detailField;
       const currentValue = await getUserDetail(this.db, this.waId, detailField);
-      if (detailField !== "language") {
+      if (detailField !== "language" && detailField !== "region") {
         const texts = {
           "username": `Your name is currently registered as ${currentValue}, what would you like to your name to be changed to?`,
           "postcode": `Your postcode is currently registered as ${currentValue}, what would you like to your postcode to be changed to?`,
@@ -274,9 +274,22 @@ class EditDetailsFlow extends BaseFlow {
         const message = createTextMessage(this.waId, text);
         await sendMessage(message);
       } else {
-        const templateSid = await findTemplateSid("edit_language", false);
-        const message = createTemplateMessage(this.waId, templateSid);
-        await sendMessage(message);
+        if (detailField === "language") {
+          const templateSid = await findTemplateSid("edit_language", false);
+          const message = createTemplateMessage(this.waId, templateSid);
+          await sendMessage(message);
+        } else if (detailField === "region") {
+          const templateSid = await findTemplateSid("select_region", false);
+          const templateVariables = {
+            select_region_message: `Your region is currently set to ${currentValue}. What would you like to set your region to?`,
+          };
+          const message = createTemplateMessage(
+            this.waId,
+            templateSid,
+            templateVariables
+          );
+          await sendMessage(message);
+        }
       }
     } else if (flowStep === 3) {
       const { detailField, detailValue } = userDetailUpdate;
