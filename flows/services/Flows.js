@@ -165,13 +165,14 @@ class SignpostingFlow extends BaseFlow {
           await sendMessage(errorMessage);
           return flowCompletionStatus;
         }
-        const { postcode, language } = this.userInfo;
+        const { postcode, language, region } = this.userInfo;
         const tag = formatTag(category);
         const pageSize = 5;
         const location_choice = location.toLowerCase();
         const dbResult = await supportOptionService.selectOptions(
           tag,
           location_choice,
+          region,
           page,
           pageSize,
           true

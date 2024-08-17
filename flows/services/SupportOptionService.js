@@ -28,124 +28,6 @@ class SupportOptionService {
     }
   }
 
-  async getAllLocalOptions(tag, page) {
-    try {
-      const foundOptions = await this.supportOptionsCollection.aggregate([
-        {
-          $facet: {
-            meta: [
-              {
-                $match: {
-                  $and: [
-                    { "Category tags": tag },
-                    { "Local / National": "Local" },
-                  ],
-                },
-              },
-              { $count: "totalCount" },
-            ],
-            results: [
-              {
-                $match: {
-                  $and: [
-                    { "Category tags": tag },
-                    { "Local / National": "Local" },
-                  ],
-                },
-              },
-              { $project: this.projection },
-            ],
-          },
-        },
-      ]);
-      const taggedOptions = await foundOptions.toArray();
-      taggedOptions[0].remaining = 0;
-      taggedOptions[0].page = page;
-      return taggedOptions;
-    } catch (err) {
-      console.log(err);
-    }
-  }
-  async getAllNationalOptions(tag, page) {
-    try {
-      const foundOptions = await this.supportOptionsCollection.aggregate([
-        {
-          $facet: {
-            meta: [
-              {
-                $match: {
-                  $and: [
-                    { "Category tags": tag },
-                    { "Local / National": "National" },
-                  ],
-                },
-              },
-              { $count: "totalCount" },
-            ],
-            results: [
-              {
-                $match: {
-                  $and: [
-                    { "Category tags": tag },
-                    { "Local / National": "National" },
-                  ],
-                },
-              },
-              { $project: this.projection },
-            ],
-          },
-        },
-      ]);
-      const taggedOptions = await foundOptions.toArray();
-      taggedOptions[0].page = page;
-      taggedOptions[0].remaining = 0;
-      return taggedOptions;
-    } catch (err) {
-      console.log(err);
-    }
-  }
-
-  async getAllLocalAndNationalOptions(tag, page) {
-    try {
-      const foundOptions = await this.supportOptionsCollection.aggregate([
-        {
-          $facet: {
-            meta: [
-              {
-                $match: {
-                  $and: [
-                    { "Category tags": tag },
-                    { "Local / National": { $in: ["Local", "National"] } },
-                  ],
-                },
-              },
-              { $count: "totalCount" },
-            ],
-            results: [
-              {
-                $match: {
-                  $and: [
-                    { "Category tags": tag },
-                    { "Local / National": { $in: ["Local", "National"] } },
-                  ],
-                },
-              },
-
-              { $sort: { "Local / National": 1 } },
-              { $project: this.projection },
-            ],
-          },
-        },
-      ]);
-      const taggedOptions = await foundOptions.toArray();
-      taggedOptions[0].page = page;
-      taggedOptions[0].remaining = 0;
-      return taggedOptions;
-    } catch (err) {
-      console.log(err);
-    }
-  }
-
   async getPaginatedNationalOptions(tag, page, pageSize) {
     try {
       const foundOptions = await this.supportOptionsCollection.aggregate([
@@ -188,7 +70,7 @@ class SupportOptionService {
     }
   }
 
-  async getPaginatedLocalOptions(tag, page, pageSize) {
+  async getPaginatedLocalOptions(tag, page, pageSize, region) {
     try {
       const foundOptions = await this.supportOptionsCollection.aggregate([
         {
@@ -196,10 +78,7 @@ class SupportOptionService {
             meta: [
               {
                 $match: {
-                  $and: [
-                    { "Category tags": tag },
-                    { "Local / National": "Local" },
-                  ],
+                  $and: [{ "Category tags": tag }, { "location": region }],
                 },
               },
               { $count: "totalCount" },
@@ -207,10 +86,7 @@ class SupportOptionService {
             results: [
               {
                 $match: {
-                  $and: [
-                    { "Category tags": tag },
-                    { "Local / National": "Local" },
-                  ],
+                  $and: [{ "Category tags": tag }, { "location": region }],
                 },
               },
               { $skip: (parseInt(page) - 1) * pageSize },
@@ -230,7 +106,7 @@ class SupportOptionService {
     }
   }
 
-  async getPaginatedLocalAndNationalOptions(tag, page, pageSize) {
+  async getPaginatedLocalAndNationalOptions(tag, page, pageSize, region) {
     try {
       const foundOptions = await this.supportOptionsCollection.aggregate([
         {
@@ -240,7 +116,12 @@ class SupportOptionService {
                 $match: {
                   $and: [
                     { "Category tags": tag },
-                    { "Local / National": { $in: ["Local", "National"] } },
+                    {
+                      $or: [
+                        { "Local / National": "National" },
+                        { location: region },
+                      ],
+                    },
                   ],
                 },
               },
@@ -251,7 +132,12 @@ class SupportOptionService {
                 $match: {
                   $and: [
                     { "Category tags": tag },
-                    { "Local / National": { $in: ["Local", "National"] } },
+                    {
+                      $or: [
+                        { "Local / National": "National" },
+                        { location: region },
+                      ],
+                    },
                   ],
                 },
               },
@@ -273,22 +159,20 @@ class SupportOptionService {
     }
   }
 
-  async selectOptions(tag, location, page, pageSize, usePagination) {
-    const locationFunctions = usePagination
-      ? {
-          "national only": this.getPaginatedNationalOptions.bind(this),
-          "local only": this.getPaginatedLocalOptions.bind(this),
-          "local and national":
-            this.getPaginatedLocalAndNationalOptions.bind(this),
-        }
-      : {
-          "national only": this.getAllNationalOptions.bind(this),
-          "local only": this.getAllLocalOptions.bind(this),
-          "local and national": this.getAllLocalAndNationalOptions.bind(this),
-        };
+  async selectOptions(tag, location, region, page, pageSize) {
+    const locationFunctions = {
+      "national only": this.getPaginatedNationalOptions.bind(this),
+      "local only": this.getPaginatedLocalOptions.bind(this),
+      "local and national": this.getPaginatedLocalAndNationalOptions.bind(this),
+    };
 
     if (locationFunctions[location]) {
-      const result = await locationFunctions[location](tag, page, pageSize);
+      const result = await locationFunctions[location](
+        tag,
+        page,
+        pageSize,
+        region
+      );
       const remaining = result[0].remaining;
       const resultPage = result[0].page;
       return {
