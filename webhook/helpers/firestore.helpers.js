@@ -1,49 +1,58 @@
 const { v4: uuidv4 } = require("uuid");
 const { FieldValue } = require("firebase-admin/firestore");
 async function createNewFlow(db, flowData, additionalProps = {}) {
-  // TO-DO check for existing flow here and remove if exists
-  const flowId = uuidv4();
-  const startTime = new Date().toISOString();
-  const { flowName, userInfo, flowStep } = flowData;
-  const userId = userInfo.WaId;
-  const existingFlowSnapshot = await db
-    .collection("flows")
-    .where("userId", "==", userId)
-    .get();
-  if (!existingFlowSnapshot.empty) {
-    const batch = db.batch();
-    existingFlowSnapshot.forEach((doc) => {
-      batch.delete(doc.ref);
-    });
-    await batch.commit();
+  try {
+    const flowId = uuidv4();
+    const startTime = new Date().toISOString();
+    const { flowName, userInfo, flowStep } = flowData;
+    const userId = userInfo.WaId;
+    const existingFlowSnapshot = await db
+      .collection("flows")
+      .where("userId", "==", userId)
+      .get();
+    if (!existingFlowSnapshot.empty) {
+      const batch = db.batch();
+      existingFlowSnapshot.forEach((doc) => {
+        batch.delete(doc.ref);
+      });
+      await batch.commit();
+    }
+    const data = {
+      startTime,
+      flowName,
+      userId,
+      flowStep,
+      ...additionalProps,
+    };
+    await db.collection("flows").doc(flowId).set(data);
+  } catch (error) {
+    console.error("Error creating flow:", error);
+    throw new Error("Failed to create new flow");
   }
-  const data = {
-    startTime,
-    flowName,
-    userId,
-    flowStep,
-    ...additionalProps,
-  };
-  await db.collection("flows").doc(flowId).set(data);
 }
 
 async function getCurrentFlow(db, userData) {
-  const userId = userData.WaId;
-  const currentFlowSnapshot = await db
-    .collection("flows")
-    .where("userId", "==", userId)
-    .get();
-  if (!currentFlowSnapshot.empty) {
-    const firstDoc = currentFlowSnapshot.docs[0]; //TO-DO: get the most recent flow here
-    const data = firstDoc.data();
-    const updateId = firstDoc.id;
-    const currentStep = data.flowStep;
-    await db
+  try {
+    const userId = userData.WaId;
+    const currentFlowSnapshot = await db
       .collection("flows")
-      .doc(updateId)
-      .update({ "flowStep": currentStep + 1 });
-    data.id = updateId; //add the id to the doc so that we can delete it by id later
-    return data;
+      .where("userId", "==", userId)
+      .get();
+    if (!currentFlowSnapshot.empty) {
+      const firstDoc = currentFlowSnapshot.docs[0]; //TO-DO: get the most recent flow here
+      const data = firstDoc.data();
+      const updateId = firstDoc.id;
+      const currentStep = data.flowStep;
+      await db
+        .collection("flows")
+        .doc(updateId)
+        .update({ "flowStep": currentStep + 1 });
+      data.id = updateId; //add the id to the doc so that we can delete it by id later
+      return data;
+    }
+  } catch (err) {
+    console.error("An error occurred getting the current flow", err);
+    throw new Error("Error in getting current flow");
   }
 }
 
