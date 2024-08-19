@@ -1,8 +1,8 @@
 class UserService {
   constructor(db) {
     this.db = db;
-    this.contactCollection = this.db("contacts");
-    this.organizationCollection = this.db("organizations");
+    this.contactCollection = this.db.collection("contacts");
+    this.organizationCollection = this.db.collection("organizations");
   }
 
   async getOrganization(organizationNumber) {
