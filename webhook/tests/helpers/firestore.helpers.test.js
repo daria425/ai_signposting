@@ -3,6 +3,7 @@ const {
   getCurrentFlow,
   deleteFlowOnCompletion,
   deleteFlowOnErr,
+  updateUserSelection,
 } = require("../../helpers/firestore.helpers");
 
 const {
@@ -165,4 +166,110 @@ describe("deleteFlowOnErr", () => {
     expect(db.collection("flows").doc).toHaveBeenCalledWith("doc-2");
     expect(db.collection("flows").doc).toHaveBeenCalledWith("doc-3");
   });
+});
+
+describe("updateUserSelection", () => {
+  let db;
+  let seeMoreOptionMessages;
+  let flowId;
+  beforeEach(() => {
+    seeMoreOptionMessages = ["See More Options", "That's great, thanks"];
+    db = mockFirestore;
+    flowId = "mocked-flow-id";
+    mockGet.mockResolvedValue({
+      empty: false,
+      docs: [
+        {
+          id: "mocked-flow-id",
+          data: () => ({ flowStep: 1 }),
+          exists: true,
+        },
+      ],
+    });
+    db.collection("flows").doc("mocked-flow-id").get = jest
+      .fn()
+      .mockResolvedValue({
+        exists: true,
+        data: () => ({ data: "mock-value" }),
+      });
+  });
+  it("increments userSelection.page if selection value is See More", async () => {
+    selectionValue = seeMoreOptionMessages[0];
+    const flowStep = 2;
+    await updateUserSelection(
+      db,
+      flowId,
+      flowStep,
+      selectionValue,
+      seeMoreOptionMessages
+    );
+    expect(
+      db.collection("flows").doc("mocked-flow-id").update
+    ).toHaveBeenCalledWith({ "userSelection.page": expect.any(Object) });
+  });
+  it("updates userSelection to endFlow if selection Value is That's great, thanks", async () => {
+    selectionValue = seeMoreOptionMessages[1];
+    const flowStep = 2;
+    await updateUserSelection(
+      db,
+      flowId,
+      flowStep,
+      selectionValue,
+      seeMoreOptionMessages
+    );
+    expect(
+      db.collection("flows").doc("mocked-flow-id").update
+    ).toHaveBeenCalledWith({ "userSelection.endFlow": true });
+  });
+  it("matches flowStep to key in selectionNames object", async () => {
+    selectionValue = "";
+    let flowStep = 2;
+    await updateUserSelection(
+      db,
+      flowId,
+      flowStep,
+      selectionValue,
+      seeMoreOptionMessages
+    );
+    expect(
+      db.collection("flows").doc("mocked-flow-id").update
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({
+        "userSelection.category": "",
+      })
+    );
+    flowStep = 3;
+    await updateUserSelection(
+      db,
+      flowId,
+      flowStep,
+      selectionValue,
+      seeMoreOptionMessages
+    );
+    expect(
+      db.collection("flows").doc("mocked-flow-id").update
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({
+        "userSelection.location": "",
+      })
+    );
+  });
+  // it("returns data of updated document if updated document exists", async () => {
+  //   selectionValue = "";
+  //   const flowStep = 2;
+  //   const updateResult = await updateUserSelection(
+  //     db,
+  //     flowId,
+  //     flowStep,
+  //     selectionValue,
+  //     seeMoreOptionMessages
+  //   );
+
+  //   expect(db.collection("flows").doc("mocked-flow-id").get).toHaveBeenCalled();
+  //   expect(updateResult).toEqual(
+  //     expect.objectContaining({
+  //       data: "mock-value",
+  //     })
+  //   );
+  // });
 });

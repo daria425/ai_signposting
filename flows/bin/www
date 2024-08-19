@@ -4,8 +4,15 @@
  * Module dependencies.
  */
 require("dotenv").config();
-const { MongoClient } = require("mongodb");
-const uri = process.env.MONGO_URI;
+const { initializeDatabases } = require("../config/database.config");
+const primaryDbConfig = {
+  primaryDbName: "signposting_db",
+  primaryDbUri: process.env.MONGO_URI,
+};
+const secondaryDbConfig = {
+  secondaryDbName: "controlRoomDB",
+  secondaryDbUri: process.env.CONTROL_ROOM_DB_URI,
+};
 const app = require("../app");
 const debug = require("debug")("flows:server");
 const http = require("http");
@@ -26,19 +33,15 @@ const server = http.createServer(app);
 /**
  * Listen on provided port, on all network interfaces.
  */
-MongoClient.connect(uri)
-  .then((client) => {
-    const db = client.db("signposting_db");
-    app.locals.db = db;
-    console.log("mongo connected");
+initializeDatabases(app, primaryDbConfig, secondaryDbConfig)
+  .then(() => {
     server.listen(port);
+    server.on("error", onError);
+    server.on("listening", onListening);
   })
   .catch((err) => {
-    console.log(err);
+    console.error("Failed to start server:", err);
   });
-
-server.on("error", onError);
-server.on("listening", onListening);
 
 /**
  * Normalize a port into a number, string, or false.

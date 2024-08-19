@@ -1,6 +1,6 @@
 async function saveUser(db, userData) {
   try {
-    const collection = db.collection("users");
+    const collection = db.collection("contacts");
     const user = await collection.findOne({ "WaId": userData.WaId });
     if (user) {
       return;
@@ -19,7 +19,7 @@ async function getUser(db, recipient) {
     // if (process.env.NODE_ENV == "development") {
     //   return testUser;
     // }
-    const collection = db.collection("users");
+    const collection = db.collection("contacts");
     const user = await collection.findOne({ "WaId": recipient });
     return user;
   } catch (err) {

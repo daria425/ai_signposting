@@ -25,7 +25,7 @@ const server = http.createServer(app);
 
 MongoClient.connect(uri)
   .then((client) => {
-    const db = client.db("signposting_db");
+    const db = client.db("controlRoomDB");
     app.locals.db = db;
     console.log("mongo connected");
     server.listen(port);

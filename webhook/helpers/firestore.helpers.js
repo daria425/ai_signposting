@@ -67,7 +67,6 @@ async function deleteFlowOnErr(db, userId, err) {
     .where("userId", "==", userId)
     .get();
   if (!currentFlowSnapshot.empty) {
-    // Iterate through all the documents and delete them
     const deletePromises = currentFlowSnapshot.docs.map((doc) =>
       db.collection("flows").doc(doc.id).delete()
     );

@@ -17,6 +17,7 @@ const mockDoc = jest.fn(() => ({
   set: mockSet,
   update: mockUpdate,
   delete: mockDelete,
+  get: mockGet,
 }));
 
 const mockCollection = jest.fn(() => ({
