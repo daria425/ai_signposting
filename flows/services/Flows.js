@@ -4,9 +4,8 @@ const {
 } = require("../helpers/messages.helpers");
 const { formatTag } = require("../helpers/format.helpers");
 const { sendMessage } = require("../helpers/twilio.helpers");
-const { updateUser, getUserDetail } = require("../helpers/database.helpers");
 const { findTemplateSid } = require("../helpers/twilio_account.helpers");
-const { logMessageAsJson } = require("../helpers/logging.helpers");
+
 class BaseFlow {
   constructor(db, userInfo, userMessage, contactModel) {
     this.db = db;
@@ -16,6 +15,11 @@ class BaseFlow {
     this.listId = userMessage?.ListId;
     this.contactModel = contactModel;
   }
+
+  async updateUser(updateData) {
+    await this.contactModel.updateContact(this.waId, updateData);
+  }
+
   async createErrorMessage(recipient) {
     const text =
       "An unexpected error occurred, please text 'hi' to search again";
@@ -26,6 +30,7 @@ class BaseFlow {
 class OnboardingFlow extends BaseFlow {
   constructor(db, userInfo, userMessage, contactModel) {
     super(db, userInfo, userMessage, contactModel);
+    this.flowName = "onboarding";
     this.onboardingTexts = {
       1: `Hello!\n\nWelcome to Alix Signposting.\n\nAlix signposts you to local and national help, starting in the region of Cornwall. You can find out more at https://www.projectalix.com/Cornwall\n\nLet's get started:\nPlease enter 'next' to continue.`,
       2: `Step 1 of 5: To begin, what is your name?`, // update name
@@ -79,15 +84,12 @@ class OnboardingFlow extends BaseFlow {
     }
     return flowCompletionStatus;
   }
-
-  async updateUser(updateData) {
-    await this.contactModel.updateContact(this.waId, updateData);
-  }
 }
 
 class SignpostingFlow extends BaseFlow {
   constructor(db, userInfo, userMessage, contactModel) {
     super(db, userInfo, userMessage, contactModel);
+    this.flowName = "signposting";
     this.signpostingTemplates = {};
   }
   async init() {
@@ -246,6 +248,7 @@ class SignpostingFlow extends BaseFlow {
 class EditDetailsFlow extends BaseFlow {
   constructor(db, userInfo, userMessage, contactModel) {
     super(db, userInfo, userMessage, contactModel);
+    this.flowName = "edit-details";
   }
   async handleFlowStep(flowStep, userDetailUpdate) {
     let flowCompletionStatus = false;
@@ -316,9 +319,6 @@ class EditDetailsFlow extends BaseFlow {
     }
 
     return flowCompletionStatus;
-  }
-  async updateUser(updateData) {
-    await this.contactModel.updateContact(this.waId, updateData);
   }
 }
 module.exports = {

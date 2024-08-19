@@ -43,6 +43,16 @@ class ContactModel {
       console.log(err);
     }
   }
+  async incrementContactField(recipient, update) {
+    try {
+      await this.collection.findOneAndUpdate(
+        { "WaId": recipient },
+        { "$inc": update }
+      );
+    } catch (err) {
+      console.log(err);
+    }
+  }
 }
 
 module.exports = {

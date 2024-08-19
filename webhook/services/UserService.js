@@ -1,12 +1,13 @@
 class UserService {
   constructor(db) {
     this.db = db;
+    this.contactCollection = this.db("contacts");
+    this.organizationCollection = this.db("organizations");
   }
 
   async getOrganization(organizationNumber) {
     try {
-      const collection = this.db.collection("organizations");
-      const organization = await collection.findOne({
+      const organization = await this.organizationCollection.findOne({
         "organizationPhoneNumber": organizationNumber,
       });
       return organization;
@@ -18,8 +19,7 @@ class UserService {
 
   async updateOrganizationWithContact(organizationNumber, contactId) {
     try {
-      const collection = this.db.collection("organizations");
-      await collection.updateOne(
+      await this.organizationCollection.updateOne(
         { "organizationPhoneNumber": organizationNumber },
         {
           $push: {
@@ -35,8 +35,9 @@ class UserService {
 
   async saveUser(userData, organizationNumber) {
     try {
-      const collection = this.db.collection("contacts");
-      const user = await collection.findOne({ "WaId": userData.WaId });
+      const user = await this.contactCollection.findOne({
+        "WaId": userData.WaId,
+      });
 
       if (user) {
         return; // User already exists; exit without further action
@@ -64,13 +65,22 @@ class UserService {
 
   async getUser(recipient) {
     try {
-      const collection = this.db.collection("contacts");
-      const user = await collection.findOne({ "WaId": recipient });
+      const user = await this.contactCollection.findOne({ "WaId": recipient });
       return user;
     } catch (err) {
       console.error(err);
       throw err; // Consider re-throwing for higher-level error handling
     }
+  }
+  async registerFlowCompletion(recipient, incrementDoc) {
+    try {
+      await this.contactCollection.findOneAndUpdate(
+        { "WaId": recipient },
+        {
+          $inc: incrementDoc,
+        }
+      );
+    } catch (err) {}
   }
 }
 

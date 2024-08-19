@@ -119,6 +119,10 @@ async function handleMessage(req, res, next) {
       );
       const flowCompletionStatus = response.data.flowCompletionStatus;
       if (flowCompletionStatus) {
+        const update = {
+          [`completed_flows.${flowName}`]: 1,
+        };
+        await userService.registerFlowCompletion(userData.WaId, update);
         await deleteFlowOnCompletion(firestore, flowId);
       }
       res.status(200).send(response.data);
