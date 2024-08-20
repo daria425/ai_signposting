@@ -13,7 +13,7 @@ class UserService {
       return organization;
     } catch (err) {
       console.error(err);
-      throw err; // Consider re-throwing for higher-level error handling
+      throw err;
     }
   }
 
@@ -29,7 +29,7 @@ class UserService {
       );
     } catch (err) {
       console.error(err);
-      throw err; // Consider re-throwing for higher-level error handling
+      throw err;
     }
   }
 
@@ -40,7 +40,7 @@ class UserService {
       });
 
       if (user) {
-        return; // User already exists; exit without further action
+        return;
       }
 
       const organization = await this.getOrganization(organizationNumber);
