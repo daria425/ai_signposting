@@ -49,7 +49,7 @@ class UserService {
         throw new Error("Organization not found");
       }
 
-      const result = await collection.insertOne({
+      const result = await this.contactCollection.insertOne({
         "WaId": userData.WaId,
         "ProfileName": userData.ProfileName,
         "organizationId": organization._id,
@@ -80,7 +80,10 @@ class UserService {
           $inc: incrementDoc,
         }
       );
-    } catch (err) {}
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
   }
 }
 
