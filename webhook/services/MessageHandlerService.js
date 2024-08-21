@@ -9,12 +9,12 @@ const {
 const { PostRequestService } = require("../services/PostRequestService");
 const { api_base } = require("../config/api_base.config");
 const { UserService } = require("../services/UserService");
-const { firestore } = require("../config/firestore.config");
 
 class MessageHandlerService {
-  constructor(req, res) {
+  constructor(req, res, firestore) {
     this.postRequestService = new PostRequestService(api_base);
     this.userService = new UserService(req.app.locals.db);
+    this.firestore = firestore;
     this.body = JSON.parse(JSON.stringify(req.body));
     this.waId = this.body.WaId;
     this.profileName = this.body.ProfileName;
@@ -42,7 +42,7 @@ class MessageHandlerService {
       }
     } catch (err) {
       console.error(err);
-      await deleteFlowOnErr(firestore, this.waId, err);
+      await deleteFlowOnErr(this.firestore, this.waId, err);
       this.res.status(500).send(err);
     }
   }
@@ -64,7 +64,7 @@ class MessageHandlerService {
   }
   async startFlow(userData, flowName, extraData = {}) {
     const messageData = this.createMessageData(userData, flowName, 1);
-    await createNewFlow(firestore, messageData, extraData);
+    await createNewFlow(this.firestore, messageData, extraData);
     const response = await this.postRequestService.make_request(
       `flows/${flowName}`,
       messageData
@@ -94,7 +94,7 @@ class MessageHandlerService {
     await this.startFlow(userData, "edit-details", extraData);
   }
   async handleExistingFlow(userData) {
-    const currentFlow = await getCurrentFlow(firestore, userData);
+    const currentFlow = await getCurrentFlow(this.firestore, userData);
     const { flowName, flowStep, id: flowId } = currentFlow;
     console.log("flow step", flowStep);
     let updatedFlowStep = flowStep;
@@ -123,7 +123,7 @@ class MessageHandlerService {
   }
   async updateUserSignpostingSelection(flowId, currentFlowStep) {
     const updatedDoc = await updateUserSelection(
-      firestore,
+      this.firestore,
       flowId,
       currentFlowStep,
       this.body.Body,
@@ -133,7 +133,7 @@ class MessageHandlerService {
   }
   async updateUserDetail(flowId, currentFlowStep) {
     const updatedDoc = await createUserDetailUpdate(
-      firestore,
+      this.firestore,
       flowId,
       currentFlowStep,
       this.body.Body,
@@ -151,7 +151,7 @@ class MessageHandlerService {
     if (response.data.flowCompletionStatus) {
       const update = { [`completed_flows.${flowName}`]: 1 };
       await this.userService.registerFlowCompletion(recipient, update);
-      await deleteFlowOnCompletion(firestore, flowId);
+      await deleteFlowOnCompletion(this.firestore, flowId);
     }
 
     this.res.status(200).send(response.data);
