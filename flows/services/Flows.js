@@ -36,7 +36,7 @@ class BaseFlow {
   async saveResponseMessage(message, flowName, templateName) {
     const messageToSave = {
       Body: message?.body ?? null,
-      To: this.organizationPhoneNumber,
+      To: `whatsapp:+${this.WaId}`,
       From: message.from,
       Direction: "outbound",
       Flow: flowName,
