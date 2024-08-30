@@ -61,7 +61,6 @@ class OnboardingFlow extends BaseFlow {
     super(db, userInfo, userMessage, contactModel, organizationPhoneNumber);
     this.flowName = "onboarding";
     this.onboardingTexts = {
-      1: `Hello!\n\nWelcome to Alix Signposting.\n\nAlix signposts you to local and national help, starting in the region of Cornwall. You can find out more at https://www.projectalix.com/Cornwall\n\nLet's get started:\nPlease enter 'next' to continue.`,
       2: `Step 1 of 5: To begin, what is your name?`, // update name
       3: `Nice to meet you!\nStep 2 of 5: To ensure we have the right information, could you share the name of the organisation you work for?`, // update organization
       5: `Step 4 of 5: Great, to better assist you could you let us know the postcode you will be seeking support around?`,
@@ -71,7 +70,7 @@ class OnboardingFlow extends BaseFlow {
 
   async handleFlowStep(flowStep) {
     let flowCompletionStatus = false;
-    if (flowStep != 6 && flowStep != 4 && flowStep != 7) {
+    if (flowStep != 6 && flowStep != 4 && flowStep != 7 && flowStep !== 1) {
       const text =
         this.onboardingTexts[flowStep] ||
         "Thank you for registering with us. Please message 'hi' to begin a search";
@@ -92,7 +91,26 @@ class OnboardingFlow extends BaseFlow {
       await this.saveResponseMessage(message, this.flowName);
       await sendMessage(message);
     } else {
-      if (flowStep === 6) {
+      if (flowStep === 1) {
+        const { templateSid, templateName } = await findTemplateSid(
+          "onboarding_welcome",
+          false
+        );
+        const templateVariables = {
+          onboarding_welcome_message: `Hello!\n\nWelcome to Alix Signposting.\n\nAlix signposts you to local and national help, starting in the region of Cornwall. You can find out more at https://www.projectalix.com/Cornwall\n\nLet's get started:\nPlease press 'next' to continue.`,
+        };
+        const templateMessage = createTemplateMessage(
+          this.WaId,
+          templateSid,
+          templateVariables
+        );
+        await this.saveResponseMessage(
+          templateMessage,
+          this.flowName,
+          templateName
+        );
+        await sendMessage(templateMessage);
+      } else if (flowStep === 6) {
         const { templateSid, templateName } = await findTemplateSid(
           "select_language",
           false

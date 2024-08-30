@@ -90,6 +90,7 @@ async function flowController(req, res, next) {
       message: message,
     });
     const contactModel = new ContactModel(controlRoomDb, startTime);
+    await contactModel.updateContact(userInfo.WaId, {});
     if (flow === "onboarding") {
       flowCompletionStatus = await runOnboardingFlow(
         db,

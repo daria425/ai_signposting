@@ -35,7 +35,8 @@ class ContactModel {
     return contact[detailField];
   }
 
-  async updateContact(recipient, update) {
+  async updateContact(recipient, updateDoc) {
+    const update = { ...updateDoc, "LastEngagedAt": new Date() };
     try {
       await this.collection.findOneAndUpdate(
         { "WaId": recipient },
