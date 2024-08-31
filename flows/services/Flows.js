@@ -50,124 +50,6 @@ class BaseFlow {
     await this.contactModel.saveContactMessage(this.WaId, messageToSave);
   }
 }
-// class OnboardingFlow extends BaseFlow {
-//   constructor(
-//     db,
-//     userInfo,
-//     userMessage,
-//     contactModel,
-//     organizationPhoneNumber
-//   ) {
-//     super(db, userInfo, userMessage, contactModel, organizationPhoneNumber);
-//     this.flowName = "onboarding";
-//     this.onboardingTexts = {
-//       2: `Step 1 of 5: To begin, what is your name?`, // update name
-//       3: `Nice to meet you!\nStep 2 of 5: To ensure we have the right information, could you share the name of the organisation you work for?`, // update organization
-//       5: `Step 4 of 5: Great, to better assist you could you let us know the postcode you will be seeking support around?`,
-//       7: `Thank you for sharing.\nBy continuing you agree to our privacy policy, which can be viewed here:\nhttps://www.projectalix.com/privacy\nDo you agree to proceed with assistance?\nPlease enter 'consent' to continue.`, // opted in, completed_onboarding = true
-//     };
-//   }
-
-//   async handleFlowStep(flowStep) {
-//     let flowCompletionStatus = false;
-//     if (flowStep != 6 && flowStep != 4 && flowStep != 7 && flowStep !== 1) {
-//       const text =
-//         this.onboardingTexts[flowStep] ||
-//         "Thank you for registering with us. Please message 'hi' to begin a search";
-//       const message = createTextMessage(this.WaId, text);
-
-//       if (flowStep === 3) {
-//         await this.updateUser({ "username": this.messageContent });
-//       } else if (flowStep === 5) {
-//         await this.updateUser({ "region": this.messageContent });
-//       } else if (flowStep === 8) {
-//         await this.updateUser({
-//           "completed_onboarding": true,
-//           "opted_in": true,
-//           "profileColor": generateProfileColor(),
-//         });
-//         flowCompletionStatus = true;
-//       }
-//       await this.saveResponseMessage(message, this.flowName);
-//       await sendMessage(message);
-//     } else {
-//       if (flowStep === 1) {
-//         const { templateSid, templateName } = await findTemplateSid(
-//           "onboarding_welcome",
-//           false
-//         );
-//         const templateVariables = {
-//           onboarding_welcome_message: `Hello!\n\nWelcome to Alix Signposting.\n\nAlix signposts you to local and national help, starting in the region of Cornwall. You can find out more at https://www.projectalix.com/Cornwall\n\nLet's get started:\nPlease press 'next' to continue.`,
-//         };
-//         const templateMessage = createTemplateMessage(
-//           this.WaId,
-//           templateSid,
-//           templateVariables
-//         );
-//         await this.saveResponseMessage(
-//           templateMessage,
-//           this.flowName,
-//           templateName
-//         );
-//         await sendMessage(templateMessage);
-//       } else if (flowStep === 6) {
-//         const { templateSid, templateName } = await findTemplateSid(
-//           "select_language",
-//           false
-//         );
-//         const templateMessage = createTemplateMessage(this.WaId, templateSid);
-//         await this.updateUser({ "postcode": this.messageContent });
-//         await this.saveResponseMessage(
-//           templateMessage,
-//           this.flowName,
-//           templateName
-//         );
-//         await sendMessage(templateMessage);
-//       } else if (flowStep === 4) {
-//         const { templateSid, templateName } = await findTemplateSid(
-//           "select_region",
-//           false
-//         );
-//         const templateVariables = {
-//           select_region_message: `Step 3 of 5: Could you let us know the region you will be seeking support around?`,
-//         };
-//         await this.updateUser({ "organization": this.messageContent });
-//         const templateMessage = createTemplateMessage(
-//           this.WaId,
-//           templateSid,
-//           templateVariables
-//         );
-//         await this.saveResponseMessage(
-//           templateMessage,
-//           this.flowName,
-//           templateName
-//         );
-//         await sendMessage(templateMessage);
-//       } else if (flowStep == 7) {
-//         const { templateSid, templateName } = await findTemplateSid(
-//           "consent_to_privacy",
-//           false
-//         );
-//         const templateVariables = {
-//           consent_message: `Thank you for sharing.\nBy continuing you agree to our privacy policy, which can be viewed here:\nhttps://www.projectalix.com/privacy\nDo you agree to proceed with assistance?\nPlease press 'consent' to continue.`,
-//         };
-//         await this.updateUser({ "language": this.messageContent });
-//         const templateMessage = createTemplateMessage(
-//           this.WaId,
-//           templateSid,
-//           templateVariables
-//         );
-//         await this.saveResponseMessage(
-//           templateMessage,
-//           this.flowName,
-//           templateName
-//         );
-//         await sendMessage(templateMessage);
-//       }
-//     }
-//     return flowCompletionStatus;
-//   }
-// }
 
 class OnboardingFlow extends BaseFlow {
   static FLOW_NAME = "onboarding";
@@ -232,7 +114,10 @@ class OnboardingFlow extends BaseFlow {
       case 6: {
         await this.handleTemplateMessage(
           "select_language",
-          {},
+          {
+            select_language_message:
+              "Step 5 of 5: Please select a language you would like to see information in",
+          },
           {
             "postcode": this.messageContent,
           }
@@ -470,7 +355,14 @@ class SignpostingFlow extends BaseFlow {
         "see_more_options",
         false
       );
-      lastMessage = createTemplateMessage(recipient, templateSid);
+      const templateVariables = {
+        see_more_options_message: "Would you like to see more options?",
+      };
+      lastMessage = createTemplateMessage(
+        recipient,
+        templateSid,
+        templateVariables
+      );
       searchableTemplateName = templateName;
     } else {
       const text =
@@ -551,7 +443,15 @@ class EditDetailsFlow extends BaseFlow {
             "edit_language",
             false
           );
-          const message = createTemplateMessage(this.WaId, templateSid);
+          const templateVariables = {
+            edit_language_message:
+              "Which language would you like to see information in?",
+          };
+          const message = createTemplateMessage(
+            this.WaId,
+            templateSid,
+            templateVariables
+          );
           await this.saveResponseMessage(message, this.flowName, templateName);
           await sendMessage(message);
         } else if (detailField === "region") {
@@ -574,12 +474,15 @@ class EditDetailsFlow extends BaseFlow {
     } else if (flowStep === 3) {
       const { detailField, detailValue } = userDetailUpdate;
       await this.updateUser({ [detailField]: detailValue });
-      const { templateSid, templateName } = await findTemplateSid("add_update");
+      const { templateSid, templateName } = await findTemplateSid(
+        "add_update",
+        false
+      );
       const templateVariables = {
         "update_success_text":
           detailField === "username"
-            ? "Your name has been updated!"
-            : `Your ${detailField} has been updated!`,
+            ? "Your name has been updated! Would you like to update anything else?"
+            : `Your ${detailField} has been updated! Would you like to update anything else?`,
       };
       const message = createTemplateMessage(
         this.WaId,
