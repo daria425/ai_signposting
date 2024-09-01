@@ -34,7 +34,12 @@ class BaseFlow {
     const message = createTextMessage(recipient, text);
     return message;
   }
-  async saveResponseMessage(message, flowName, templateName) {
+  async saveResponseMessage(
+    message,
+    flowName,
+    templateName,
+    messageType = "text"
+  ) {
     const messageToSave = {
       Body: message?.body ?? null,
       To: `whatsapp:+${this.WaId}`,
@@ -46,6 +51,7 @@ class BaseFlow {
       CreatedAt: new Date(),
       Status: "delivered",
       SearchableTemplateName: templateName ?? null,
+      MessageType: messageType,
     };
     await this.contactModel.saveContactMessage(this.WaId, messageToSave);
   }
@@ -168,7 +174,8 @@ class OnboardingFlow extends BaseFlow {
     await this.saveResponseMessage(
       templateMessage,
       OnboardingFlow.FLOW_NAME,
-      templateName
+      templateName,
+      "template"
     );
     await sendMessage(templateMessage);
   }
@@ -263,7 +270,8 @@ class SignpostingFlow extends BaseFlow {
       await this.saveResponseMessage(
         templateMessage,
         this.flowName,
-        templateName
+        templateName,
+        "template"
       );
       await sendMessage(templateMessage);
     }
@@ -339,7 +347,8 @@ class SignpostingFlow extends BaseFlow {
             await this.saveResponseMessage(
               lastMessage,
               this.flowName,
-              templateName
+              templateName,
+              templateName ? "template" : "text"
             );
             await sendMessage(lastMessage);
           }
@@ -418,7 +427,8 @@ class EditDetailsFlow extends BaseFlow {
       await this.saveResponseMessage(
         templateMessage,
         this.flowName,
-        templateName
+        templateName,
+        "template"
       );
       await sendMessage(templateMessage);
     } else if (flowStep === 2) {
@@ -452,7 +462,12 @@ class EditDetailsFlow extends BaseFlow {
             templateSid,
             templateVariables
           );
-          await this.saveResponseMessage(message, this.flowName, templateName);
+          await this.saveResponseMessage(
+            message,
+            this.flowName,
+            templateName,
+            "template"
+          );
           await sendMessage(message);
         } else if (detailField === "region") {
           const { templateSid, templateName } = await findTemplateSid(
@@ -467,7 +482,12 @@ class EditDetailsFlow extends BaseFlow {
             templateSid,
             templateVariables
           );
-          await this.saveResponseMessage(message, this.flowName, templateName);
+          await this.saveResponseMessage(
+            message,
+            this.flowName,
+            templateName,
+            "template"
+          );
           await sendMessage(message);
         }
       }
@@ -489,7 +509,12 @@ class EditDetailsFlow extends BaseFlow {
         templateSid,
         templateVariables
       );
-      await this.saveResponseMessage(message, this.flowName, templateName);
+      await this.saveResponseMessage(
+        message,
+        this.flowName,
+        templateName,
+        "template"
+      );
       await sendMessage(message);
     }
 
