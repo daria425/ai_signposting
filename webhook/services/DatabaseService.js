@@ -1,9 +1,11 @@
+const { format } = require("date-fns");
 class DatabaseService {
   constructor(db) {
     this.db = db;
     this.contactCollection = this.db.collection("contacts");
     this.organizationCollection = this.db.collection("organizations");
     this.messagesCollection = this.db.collection("messages");
+    this.completedFlowsCollection = this.db.collection("completed_flows");
   }
 
   async getOrganization(organizationNumber) {
@@ -89,11 +91,21 @@ class DatabaseService {
   }
   async registerFlowCompletion(recipient, incrementDoc) {
     try {
+      const currentDate = format(new Date(), "yyyy-MM-dd");
       await this.contactCollection.findOneAndUpdate(
         { "WaId": recipient },
         {
           $inc: incrementDoc,
         }
+      );
+      await this.completedFlowsCollection.findOneAndUpdate(
+        {
+          date: currentDate,
+        },
+        {
+          $inc: incrementDoc,
+        },
+        { upsert: true }
       );
     } catch (err) {
       console.error(err);
