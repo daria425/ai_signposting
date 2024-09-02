@@ -89,8 +89,9 @@ class DatabaseService {
       throw err;
     }
   }
-  async registerFlowCompletion(recipient, incrementDoc) {
+  async registerFlowCompletion(recipient, incrementDoc, organizationNumber) {
     try {
+      const organization = await this.getOrganization(organizationNumber);
       const currentDate = format(new Date(), "yyyy-MM-dd");
       await this.contactCollection.findOneAndUpdate(
         { "WaId": recipient },
@@ -100,6 +101,7 @@ class DatabaseService {
       );
       await this.completedFlowsCollection.findOneAndUpdate(
         {
+          organizationId: organization._id,
           date: currentDate,
         },
         {

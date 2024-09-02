@@ -179,7 +179,11 @@ class MessageHandlerService {
     );
     if (response.data.flowCompletionStatus) {
       const update = { [`completed_flows.${flowName}`]: 1 };
-      await this.databaseService.registerFlowCompletion(recipient, update);
+      await this.databaseService.registerFlowCompletion(
+        recipient,
+        update,
+        this.organizationNumber
+      );
       await deleteFlowOnCompletion(this.firestore, flowId);
     }
     messageToSave.Flow = flowName;
