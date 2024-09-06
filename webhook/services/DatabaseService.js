@@ -132,7 +132,7 @@ class DatabaseService {
       console.log(flowId);
       const isEnabled = await this.organizationCollection.findOne({
         _id: organizationId,
-        "enabledFlowIds": new ObjectId(flowId),
+        sendableFlows: new ObjectId(flowId),
       });
       return isEnabled;
     } catch (err) {

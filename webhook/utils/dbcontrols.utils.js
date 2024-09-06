@@ -172,4 +172,5 @@ addFlows(client, "whatsapp:+447462582640", [
   "letter-translation",
   "onboarding",
   "signposting",
+  "survey",
 ]);
