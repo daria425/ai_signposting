@@ -20,11 +20,11 @@ class BaseMessageHandler {
     this.body = req.body;
     this.res = res;
   }
-  createMessageData(userData, flowName, flowStep, clientSideTriggered) {
+  createMessageData(userData, flowName, flowStep) {
     return {
       userInfo: userData,
       organizationPhoneNumber: this.organizationNumber,
-      message: { ...this.body, clientSideTriggered },
+      message: this.body,
       flowName,
       flowStep,
       startTime: new Date(),
@@ -80,7 +80,7 @@ class MessageHandlerService extends BaseMessageHandler {
   }
 
   async startFlow(userData, messageToSave, flowName, extraData = {}) {
-    const messageData = this.createMessageData(userData, flowName, 1, false);
+    const messageData = this.createMessageData(userData, flowName, 1);
     await createNewFlow(this.firestore, messageData, extraData);
     const response = await this.postRequestService.make_request(
       `flows/${flowName}`,
@@ -124,8 +124,7 @@ class MessageHandlerService extends BaseMessageHandler {
     const messageData = this.createMessageData(
       userData,
       flowName,
-      updatedFlowStep,
-      false
+      updatedFlowStep
     );
     if (flowName === "signposting") {
       messageData.userSelection = await this.updateUserSignpostingSelection(
@@ -194,57 +193,6 @@ class MessageHandlerService extends BaseMessageHandler {
   }
 }
 
-class FlowTriggerService extends BaseMessageHandler {
-  constructor(req, res, organizationNumber, firestore) {
-    super(req, res, organizationNumber, firestore);
-    this.flow = this.body.flow;
-    this.contacts = this.body.contacts;
-  }
-  async handle() {
-    const insertedId = await this.databaseService.saveTriggeredFlow(
-      this.body.flow
-    );
-    const promises = this.contacts.map((contact) =>
-      this.handleBulkMessages(
-        contact.WaId,
-        contact.ProfileName,
-        insertedId
-      ).catch((error) => {
-        console.error(`Failed to process contact ${contact.WaId}:`, error);
-      })
-    );
-    await Promise.all(promises);
-    this.res.status(200).send("Messages processed");
-  }
-  async handleBulkMessages(WaId, ProfileName, sentFlowId) {
-    const registeredUser = await this.databaseService.getUser(WaId);
-
-    if (!this.flow.isSendable) {
-      this.res.status(403).send("Flow not enabled for this organization");
-      return;
-    }
-    const userData = registeredUser || {
-      "WaId": WaId,
-      "ProfileName": ProfileName,
-    };
-    if (this.body.flowName === "onboarding") {
-      await this.databaseService.saveUser(userData);
-    }
-    await this.databaseService.updateFlowWithContact(WaId, sentFlowId);
-    return this.startFlow(userData, this.flow.flowName);
-  }
-  async startFlow(userData, flowName, extraData = {}) {
-    const messageData = this.createMessageData(userData, flowName, 1, true);
-    console.log("messageData", messageData);
-    await createNewFlow(this.firestore, messageData, extraData);
-    await this.postRequestService.make_request(
-      `flows/${flowName}`,
-      messageData
-    );
-  }
-}
-
 module.exports = {
-  FlowTriggerService,
   MessageHandlerService,
 };
