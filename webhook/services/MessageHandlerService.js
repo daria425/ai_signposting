@@ -24,9 +24,8 @@ class BaseMessageHandler {
     return {
       userInfo: userData,
       organizationPhoneNumber: this.organizationNumber,
-      message: this.body,
+      message: { ...this.body, clientSideTriggered },
       flowName,
-      clientSideTriggered,
       flowStep,
       startTime: new Date(),
     };
@@ -125,7 +124,8 @@ class MessageHandlerService extends BaseMessageHandler {
     const messageData = this.createMessageData(
       userData,
       flowName,
-      updatedFlowStep
+      updatedFlowStep,
+      false
     );
     if (flowName === "signposting") {
       messageData.userSelection = await this.updateUserSignpostingSelection(
@@ -201,17 +201,22 @@ class FlowTriggerService extends BaseMessageHandler {
     this.contacts = this.body.contacts;
   }
   async handle() {
+    const insertedId = await this.databaseService.saveTriggeredFlow(
+      this.body.flow
+    );
     const promises = this.contacts.map((contact) =>
-      this.handleBulkMessages(contact.WaId, contact.ProfileName).catch(
-        (error) => {
-          console.error(`Failed to process contact ${contact.WaId}:`, error);
-        }
-      )
+      this.handleBulkMessages(
+        contact.WaId,
+        contact.ProfileName,
+        insertedId
+      ).catch((error) => {
+        console.error(`Failed to process contact ${contact.WaId}:`, error);
+      })
     );
     await Promise.all(promises);
     this.res.status(200).send("Messages processed");
   }
-  async handleBulkMessages(WaId, ProfileName) {
+  async handleBulkMessages(WaId, ProfileName, sentFlowId) {
     const registeredUser = await this.databaseService.getUser(WaId);
 
     if (!this.flow.isSendable) {
@@ -225,7 +230,8 @@ class FlowTriggerService extends BaseMessageHandler {
     if (this.body.flowName === "onboarding") {
       await this.databaseService.saveUser(userData);
     }
-    await this.startFlow(userData, this.flow.flowName);
+    await this.databaseService.updateFlowWithContact(WaId, sentFlowId);
+    return this.startFlow(userData, this.flow.flowName);
   }
   async startFlow(userData, flowName, extraData = {}) {
     const messageData = this.createMessageData(userData, flowName, 1, true);

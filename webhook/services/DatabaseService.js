@@ -129,7 +129,33 @@ class DatabaseService {
   }
 
   async saveTriggeredFlow(flow) {
-    await this.sentFlowsCollection.insertOne(flow);
+    const { flowName, addedContacts } = flow;
+    const insertedId = await this.sentFlowsCollection.insertOne({
+      flowName,
+      addedContacts,
+      CreatedAt: new Date(),
+    });
+    return insertedId;
+  }
+  async updateFlowWithContact(WaId, insertedFlowId) {
+    const contact = await this.contactCollection.findOne({
+      "WaId": WaId,
+    });
+    await this.sentFlowsCollection.findOneAndUpdate(
+      { "_id": insertedFlowId },
+      {
+        $push: {
+          sentTo: {
+            ContactId: contact._id,
+            lastSentDate: new Date(),
+            status: "sent",
+          },
+        },
+        $set: {
+          UpdatedAt: new Date(),
+        },
+      }
+    );
   }
 }
 
