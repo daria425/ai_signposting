@@ -50,7 +50,7 @@ class MessageHandlerService extends BaseMessageHandler {
         "ProfileName": this.body.ProfileName,
       };
       const messageToSave = {
-        OrganizationId: organization._id,
+        OrganizationId: organization?._id || null,
         ...this.body,
         CreatedAt: new Date(),
         Direction: "inbound",
@@ -198,32 +198,43 @@ class FlowTriggerService extends BaseMessageHandler {
   constructor(req, res, organizationNumber, firestore) {
     super(req, res, organizationNumber, firestore);
     this.flow = this.body.flow;
+    this.contacts = this.body.contacts;
   }
-
   async handle() {
-    const registeredUser = await this.databaseService.getUser(this.body.WaId);
+    const promises = this.contacts.map((contact) =>
+      this.handleBulkMessages(contact.WaId, contact.ProfileName).catch(
+        (error) => {
+          console.error(`Failed to process contact ${contact.WaId}:`, error);
+        }
+      )
+    );
+    await Promise.all(promises);
+    this.res.status(200).send("Messages processed");
+  }
+  async handleBulkMessages(WaId, ProfileName) {
+    const registeredUser = await this.databaseService.getUser(WaId);
 
     if (!this.flow.isSendable) {
       this.res.status(403).send("Flow not enabled for this organization");
       return;
     }
     const userData = registeredUser || {
-      "WaId": this.body.WaId,
-      "ProfileName": this.body.ProfileName,
+      "WaId": WaId,
+      "ProfileName": ProfileName,
     };
     if (this.body.flowName === "onboarding") {
       await this.databaseService.saveUser(userData);
     }
-    await this.startFlow(userData, this.flow.name);
+    await this.startFlow(userData, this.flow.flowName);
   }
   async startFlow(userData, flowName, extraData = {}) {
     const messageData = this.createMessageData(userData, flowName, 1, true);
+    console.log("messageData", messageData);
     await createNewFlow(this.firestore, messageData, extraData);
-    const response = await this.postRequestService.make_request(
+    await this.postRequestService.make_request(
       `flows/${flowName}`,
       messageData
     );
-    this.res.status(200).send(response.data);
   }
 }
 

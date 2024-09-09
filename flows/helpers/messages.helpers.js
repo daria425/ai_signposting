@@ -1,4 +1,7 @@
-const messagingServiceSid = process.env.TWILIO_MESSAGING_SERVICE_SID;
+let messagingServiceSid = process.env.TEST_TWILIO_MESSAGING_SERVICE_SID;
+if (process.env.NODE_ENV !== "development") {
+  messagingServiceSid = process.env.TWILIO_MESSAGING_SERVICE_SID;
+}
 const createTextMessage = (waId, textContent) => {
   const message = {
     from: messagingServiceSid,
