@@ -1,10 +1,9 @@
 const { v4: uuidv4 } = require("uuid");
 const { FieldValue } = require("firebase-admin/firestore");
-async function createNewFlow(db, flowData, additionalProps = {}) {
+async function createNewFlow(db, messageData, additionalProps = {}) {
   try {
-    const flowId = uuidv4();
     const startTime = new Date().toISOString();
-    const { flowName, userInfo, flowStep } = flowData;
+    const { flowName, userInfo, flowStep, message } = messageData;
     const userId = userInfo.WaId;
     const existingFlowSnapshot = await db
       .collection("flows")
@@ -24,7 +23,7 @@ async function createNewFlow(db, flowData, additionalProps = {}) {
       flowStep,
       ...additionalProps,
     };
-    await db.collection("flows").doc(flowId).set(data);
+    await db.collection("flows").doc(message.trackedFlowId).set(data);
   } catch (error) {
     console.error("Error creating flow:", error);
     throw new Error("Failed to create new flow");

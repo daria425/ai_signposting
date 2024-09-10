@@ -6,6 +6,7 @@ const {
   updateUserSelection,
   createUserDetailUpdate,
 } = require("../helpers/firestore.helpers");
+const { v4: uuidv4 } = require("uuid");
 const { logMessageAsJSON } = require("../helpers/logging.helpers"); //eslint-disable-line
 const { PostRequestService } = require("./PostRequestService");
 const { api_base } = require("../config/api_base.config");
@@ -20,11 +21,11 @@ class BaseMessageHandler {
     this.body = req.body;
     this.res = res;
   }
-  createMessageData(userData, flowName, flowStep) {
+  createMessageData(userData, flowName, trackedFlowId, flowStep) {
     return {
       userInfo: userData,
       organizationPhoneNumber: this.organizationNumber,
-      message: this.body,
+      message: { ...this.body, trackedFlowId },
       flowName,
       flowStep,
       startTime: new Date(),
@@ -80,14 +81,24 @@ class MessageHandlerService extends BaseMessageHandler {
   }
 
   async startFlow(userData, messageToSave, flowName, extraData = {}) {
-    const messageData = this.createMessageData(userData, flowName, 1);
+    const trackedFlowId = uuidv4();
+    const updatedMessageToSave = {
+      ...messageToSave,
+      Flow: flowName,
+      trackedFlowId: trackedFlowId,
+    };
+    const messageData = this.createMessageData(
+      userData,
+      flowName,
+      trackedFlowId,
+      1
+    );
     await createNewFlow(this.firestore, messageData, extraData);
     const response = await this.postRequestService.make_request(
       `flows/${flowName}`,
       messageData
     );
-    messageToSave.Flow = flowName;
-    await this.databaseService.saveMessage(messageToSave);
+    await this.databaseService.saveMessage(updatedMessageToSave);
     this.res.status(200).send(response.data);
   }
 
@@ -124,8 +135,10 @@ class MessageHandlerService extends BaseMessageHandler {
     const messageData = this.createMessageData(
       userData,
       flowName,
+      flowId,
       updatedFlowStep
     );
+    await this.databaseService.updateFlow(flowId, "in_progress");
     if (flowName === "signposting") {
       messageData.userSelection = await this.updateUserSignpostingSelection(
         flowId,
@@ -185,14 +198,71 @@ class MessageHandlerService extends BaseMessageHandler {
         update,
         this.organizationNumber
       );
+      await this.databaseService.updateFlow(flowId, "completed");
       await deleteFlowOnCompletion(this.firestore, flowId);
     }
-    messageToSave.Flow = flowName;
-    await this.databaseService.saveMessage(messageToSave);
+    const updatedMessageToSave = {
+      ...messageToSave,
+      Flow: flowName,
+      trackedFlowId: flowId,
+    };
+    await this.databaseService.saveMessage(updatedMessageToSave);
     this.res.status(200).send(response.data);
   }
 }
 
+class FlowTriggerService extends BaseMessageHandler {
+  constructor(req, res, organizationNumber, firestore) {
+    super(req, res, organizationNumber, firestore);
+    this.flow = this.body.flow;
+    this.contacts = this.body.contacts;
+  }
+  async handle() {
+    const promises = this.contacts.map((contact) =>
+      this.handleBulkMessages(contact.WaId, contact.ProfileName).catch(
+        (error) => {
+          console.error(`Failed to process contact ${contact.WaId}:`, error);
+        }
+      )
+    );
+    await Promise.all(promises);
+    this.res.status(200).send("Messages processed");
+  }
+  async handleBulkMessages(WaId, ProfileName) {
+    const registeredUser = await this.databaseService.getUser(WaId);
+
+    if (!this.flow.isSendable) {
+      this.res.status(403).send("Flow not enabled for this organization");
+      return;
+    }
+    const userData = registeredUser || {
+      "WaId": WaId,
+      "ProfileName": ProfileName,
+    };
+    if (this.body.flowName === "onboarding") {
+      await this.databaseService.saveUser(userData);
+    }
+    await this.startFlow(userData, this.flow.flowName);
+  }
+  async startFlow(userData, flowName, extraData = {}) {
+    const trackedFlowId = uuidv4();
+    const messageData = this.createMessageData(
+      userData,
+      flowName,
+      trackedFlowId,
+      1
+    );
+    await this.databaseService.saveFlow(userData.WaId, trackedFlowId, flowName);
+    console.log("messageData", messageData); //HERE WE DONT SAVE THE MESSAGE BECAUSE IT ISNT AN ACTUAL WHATSAPP MESSAGE
+    await createNewFlow(this.firestore, messageData, extraData);
+    await this.postRequestService.make_request(
+      `flows/${flowName}`,
+      messageData
+    );
+  }
+}
+
 module.exports = {
+  FlowTriggerService,
   MessageHandlerService,
 };

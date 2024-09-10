@@ -69,8 +69,11 @@ class ContactModel {
     );
     return insertedMessage.insertedId;
   }
-  async updateContactMessage(messageId, update) {
-    await this.messageCollection.findOneAndUpdate({ "_id": messageId }, update);
+  async addMessageSid(messageId, sid) {
+    await this.messageCollection.findOneAndUpdate(
+      { "_id": messageId },
+      { $set: { MessageSid: sid } }
+    );
   }
 }
 

@@ -22,6 +22,7 @@ class BaseFlow {
     this.listId = userMessage?.ListId;
     this.contactModel = contactModel;
     this.organizationPhoneNumber = organizationPhoneNumber;
+    this.trackedFlowId = userMessage.trackedFlowId;
   }
 
   async updateUser(updateData) {
@@ -35,7 +36,9 @@ class BaseFlow {
     return message;
   }
   async saveResponseMessage(message, flowName, templateName) {
+    //OUTBOUND MESSAGE
     const messageToSave = {
+      trackedFlowId: this.trackedFlowId,
       Body: message?.body ?? null,
       To: `whatsapp:+${this.WaId}`,
       From: message.from,
@@ -53,17 +56,13 @@ class BaseFlow {
     );
     return insertedId;
   }
-  async updateResponseMessage(messageId, sid) {
-    await this.contactModel.updateContactMessage(messageId, {
-      $set: {
-        MessageSid: sid,
-      },
-    });
+  async updateResponse(messageId, sid) {
+    await this.contactModel.addMessageSid(messageId, sid);
   }
   async saveAndSendTextMessage(message, flowName) {
     const insertedId = await this.saveResponseMessage(message, flowName);
     const sid = await sendMessage(message);
-    await this.updateResponseMessage(insertedId, sid);
+    await this.updateResponse(insertedId, sid);
   }
 
   async saveAndSendTemplateMessage(templateKey, templateVariables, flowName) {
@@ -82,7 +81,7 @@ class BaseFlow {
       templateName
     );
     const sid = await sendMessage(templateMessage);
-    await this.updateResponseMessage(insertedId, sid);
+    await this.updateResponse(insertedId, sid);
   }
 }
 
@@ -286,7 +285,7 @@ class SignpostingFlow extends BaseFlow {
         templateName
       );
       const sid = await sendMessage(templateMessage);
-      await this.updateResponseMessage(insertedId, sid);
+      await this.updateResponse(insertedId, sid);
     }
     if (flowStep >= 4) {
       const { location, category, page, endFlow } = userSelection;
@@ -363,7 +362,7 @@ class SignpostingFlow extends BaseFlow {
               templateName
             );
             const sid = await sendMessage(lastMessage);
-            await this.updateResponseMessage(insertedId, sid);
+            await this.updateResponse(insertedId, sid);
           }
         }
       }

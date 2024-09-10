@@ -93,7 +93,7 @@ class DatabaseService {
   }
   async registerFlowCompletion(recipient, incrementDoc, organizationNumber) {
     try {
-      const organization = await this.getOrganization(organizationNumber);
+      const organization = await this.getOrganization(organizationNumber); //ORGANIZATION NUMBER TRACKED
       const currentDate = format(new Date(), "yyyy-MM-dd");
       await this.contactCollection.findOneAndUpdate(
         { "WaId": recipient },
@@ -128,30 +128,28 @@ class DatabaseService {
     }
   }
 
-  async saveTriggeredFlow(flow) {
-    const { flowName, addedContacts } = flow;
-    const insertedId = await this.sentFlowsCollection.insertOne({
-      flowName,
-      addedContacts,
-      CreatedAt: new Date(),
-    });
-    return insertedId;
+  async saveFlow(WaId, trackedFlowId, flowName) {
+    try {
+      const contact = await this.getUser(WaId);
+      const newFlowDoc = {
+        CreatedAt: new Date(),
+        trackedFlowId: trackedFlowId,
+        flowName: flowName,
+        ContactId: contact._id,
+        OrganizationId: contact.organizationId,
+        Status: "sent",
+      };
+      await this.sentFlowsCollection.insertOne(newFlowDoc);
+    } catch (err) {
+      console.error(err);
+    }
   }
-  async updateFlowWithContact(WaId, insertedFlowId) {
-    const contact = await this.contactCollection.findOne({
-      "WaId": WaId,
-    });
+  async updateFlow(flowId, statusUpdate) {
     await this.sentFlowsCollection.findOneAndUpdate(
-      { "_id": insertedFlowId },
+      { "trackedFlowId": flowId },
       {
-        $push: {
-          sentTo: {
-            ContactId: contact._id,
-            lastSentDate: new Date(),
-            status: "sent",
-          },
-        },
         $set: {
+          Status: statusUpdate,
           UpdatedAt: new Date(),
         },
       }
