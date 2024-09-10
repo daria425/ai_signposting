@@ -99,6 +99,12 @@ class MessageHandlerService extends BaseMessageHandler {
       1
     );
     await createNewFlow(this.firestore, messageData, extraData);
+    await this.databaseService.saveFlow(
+      userData.WaId,
+      trackedFlowId,
+      flowName,
+      this.clientSideTriggered
+    );
     const response = await this.postRequestService.make_request(
       `flows/${flowName}`,
       messageData
@@ -160,8 +166,7 @@ class MessageHandlerService extends BaseMessageHandler {
       flowName,
       messageToSave,
       messageData,
-      flowId,
-      this.WaId
+      flowId
     );
   }
   async updateUserSignpostingSelection(flowId, currentFlowStep) {
@@ -185,24 +190,12 @@ class MessageHandlerService extends BaseMessageHandler {
     return updatedDoc?.userDetailUpdate;
   }
 
-  async processFlowResponse(
-    flowName,
-    messageToSave,
-    messageData,
-    flowId,
-    recipient
-  ) {
+  async processFlowResponse(flowName, messageToSave, messageData, flowId) {
     const response = await this.postRequestService.make_request(
       `flows/${flowName}`,
       messageData
     );
     if (response.data.flowCompletionStatus) {
-      const update = { [`completed_flows.${flowName}`]: 1 };
-      await this.databaseService.registerFlowCompletion(
-        recipient,
-        update,
-        this.organizationNumber
-      );
       await this.databaseService.updateFlow(flowId, "completed");
       await deleteFlowOnCompletion(this.firestore, flowId);
     }
@@ -258,7 +251,12 @@ class FlowTriggerService extends BaseMessageHandler {
       trackedFlowId,
       1
     );
-    await this.databaseService.saveFlow(userData.WaId, trackedFlowId, flowName);
+    await this.databaseService.saveFlow(
+      userData.WaId,
+      trackedFlowId,
+      flowName,
+      this.clientSideTriggered
+    );
     console.log("messageData", messageData); //HERE WE DONT SAVE THE MESSAGE BECAUSE IT ISNT AN ACTUAL WHATSAPP MESSAGE
     await createNewFlow(this.firestore, messageData, extraData);
     await this.postRequestService.make_request(

@@ -1,12 +1,10 @@
-const { format } = require("date-fns");
 class DatabaseService {
   constructor(db) {
     this.db = db;
     this.contactCollection = this.db.collection("contacts");
     this.organizationCollection = this.db.collection("organizations");
     this.messagesCollection = this.db.collection("messages");
-    this.completedFlowsCollection = this.db.collection("completed_flows");
-    this.sentFlowsCollection = this.db.collection("sent_flows");
+    this.sentFlowsCollection = this.db.collection("flow_history");
     this.availableFlowsCollection = this.db.collection("flows");
   }
 
@@ -91,31 +89,6 @@ class DatabaseService {
       throw err;
     }
   }
-  async registerFlowCompletion(recipient, incrementDoc, organizationNumber) {
-    try {
-      const organization = await this.getOrganization(organizationNumber); //ORGANIZATION NUMBER TRACKED
-      const currentDate = format(new Date(), "yyyy-MM-dd");
-      await this.contactCollection.findOneAndUpdate(
-        { "WaId": recipient },
-        {
-          $inc: incrementDoc,
-        }
-      );
-      await this.completedFlowsCollection.findOneAndUpdate(
-        {
-          organizationId: organization._id,
-          date: currentDate,
-        },
-        {
-          $inc: incrementDoc,
-        },
-        { upsert: true }
-      );
-    } catch (err) {
-      console.error(err);
-      throw err;
-    }
-  }
   async updateMessageStatus(messageSid, status) {
     try {
       const updatedMessage = await this.messagesCollection.findOneAndUpdate(
@@ -131,16 +104,17 @@ class DatabaseService {
     }
   }
 
-  async saveFlow(WaId, trackedFlowId, flowName) {
+  async saveFlow(WaId, trackedFlowId, flowName, clientSideTriggered) {
     try {
       const contact = await this.getUser(WaId);
       const newFlowDoc = {
         CreatedAt: new Date(),
-        trackedFlowId: trackedFlowId,
         flowName: flowName,
         ContactId: contact._id,
         OrganizationId: contact.organizationId,
         Status: "sent",
+        clientSideTriggered,
+        trackedFlowId,
       };
       await this.sentFlowsCollection.insertOne(newFlowDoc);
     } catch (err) {
