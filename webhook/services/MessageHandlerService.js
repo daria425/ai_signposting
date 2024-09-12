@@ -244,7 +244,7 @@ class FlowTriggerService extends BaseMessageHandler {
   ) {
     super(req, res, organizationPhoneNumber, firestore, clientSideTriggered);
     this.flow = this.body.flow;
-    this.contacts = this.body.contacts;
+    this.contacts = this.body.contactList;
   }
   async handle() {
     const promises = this.contacts.map((contact) =>
@@ -267,7 +267,7 @@ class FlowTriggerService extends BaseMessageHandler {
       "WaId": WaId,
       "ProfileName": ProfileName,
     };
-    if (this.body.flowName === "onboarding") {
+    if (this.flow.flowName === "onboarding") {
       await this.databaseService.saveUser(userData);
     }
     await this.startFlow({ userData, flowName: this.flow.flowName });
