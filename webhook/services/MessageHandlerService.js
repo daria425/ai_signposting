@@ -300,7 +300,7 @@ class FlowTriggerService extends BaseMessageHandler {
       clientSideTriggered: this.clientSideTriggered,
     });
     //HERE WE DONT SAVE THE MESSAGE BECAUSE IT ISNT AN ACTUAL WHATSAPP MESSAGE
-    await createNewFlow(this.firestore, messageData);
+    await createNewFlow({ db: this.firestore, messageData });
     await this.postRequestService.make_request(
       `flows/${flowName}`,
       messageData
