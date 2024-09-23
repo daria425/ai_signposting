@@ -6,6 +6,10 @@
 require("dotenv").config();
 const { MongoClient } = require("mongodb");
 const uri = process.env.MONGO_URI;
+let dbName = "controlRoomDB";
+if (process.env.NODE_ENV !== "production") {
+  dbName = "controlRoomDB_dev";
+}
 const app = require("../app");
 const debug = require("debug")("webhook:server");
 const http = require("http");
@@ -25,9 +29,9 @@ const server = http.createServer(app);
 
 MongoClient.connect(uri)
   .then((client) => {
-    const db = client.db("controlRoomDB");
+    const db = client.db(dbName);
     app.locals.db = db;
-    console.log("mongo connected");
+    console.log("mongo connected to" + " " + dbName);
     server.listen(port);
   })
   .catch((err) => {

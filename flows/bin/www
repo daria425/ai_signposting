@@ -10,7 +10,10 @@ const primaryDbConfig = {
   primaryDbUri: process.env.MONGO_URI,
 };
 const secondaryDbConfig = {
-  secondaryDbName: "controlRoomDB",
+  secondaryDbName:
+    process.env.NODE_ENV === "production"
+      ? "controlRoomDB"
+      : "controlRoomDB_dev",
   secondaryDbUri: process.env.CONTROL_ROOM_DB_URI,
 };
 const app = require("../app");
