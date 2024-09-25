@@ -510,7 +510,7 @@ class FatMacysSurveyFlow extends BaseFlow {
   ) {
     super(db, userInfo, userMessage, contactModel, organizationPhoneNumber);
   }
-  async handleFlowStep(flowStep, cancelSurvey) {
+  async handleFlowStep(flowStep, flowSection, cancelSurvey) {
     let flowCompletionStatus = false;
     if (cancelSurvey) {
       const message = this.createCancellationMessage(this.WaId);
@@ -518,10 +518,24 @@ class FatMacysSurveyFlow extends BaseFlow {
       flowCompletionStatus = true;
       return flowCompletionStatus;
     }
-    switch (flowStep) {
-      case 1:
-        await this.handleTemplateMessage({ templateKey: "survey_intro" });
-        break;
+    if (flowStep === 1) {
+      //FLOW STARTS HERE
+      await this.handleTemplateMessage({ templateKey: "survey_intro" });
+    } else {
+      const { responseContent, responseType, templateKey } =
+        surveyConfig[flowSection][flowStep];
+      if (responseType === "text") {
+        const message = createTextMessage(this.WaId, responseContent);
+        await this.saveAndSendTextMessage(
+          message,
+          FatMacysSurveyFlow.FLOW_NAME
+        );
+      } else if (responseType === "template") {
+        await this.handleTemplateMessage({
+          templateKey,
+          templateVariables: responseContent,
+        });
+      }
     }
     return flowCompletionStatus;
   }

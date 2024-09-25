@@ -17,6 +17,7 @@ async function runSurveyFlow({
   userMessage,
   organizationPhoneNumber,
   cancelSurvey,
+  flowSection,
 }) {
   const surveyFlow = new FatMacysSurveyFlow(
     db,
@@ -27,6 +28,7 @@ async function runSurveyFlow({
   );
   const flowCompletionStatus = await surveyFlow.handleFlowStep(
     flowStep,
+    flowSection,
     cancelSurvey
   );
   return flowCompletionStatus;
@@ -145,6 +147,7 @@ async function flowController(req, res, next) {
       });
     } else if (flow === "survey") {
       const cancelSurvey = req.body.cancelSurvey;
+      const flowSection = req.body.flowSection;
       flowCompletionStatus = await runSurveyFlow({
         db,
         contactModel,
@@ -153,6 +156,7 @@ async function flowController(req, res, next) {
         userMessage: message,
         organizationPhoneNumber,
         cancelSurvey,
+        flowSection,
       });
     }
     res.status(200).send({ flowCompletionStatus });

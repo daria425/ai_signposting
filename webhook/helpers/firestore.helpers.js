@@ -2,7 +2,7 @@ const { FieldValue } = require("firebase-admin/firestore");
 async function createNewFlow({ db, messageData, extraData }) {
   try {
     const startTime = new Date().toISOString();
-    const { flowName, userInfo, flowStep, message } = messageData;
+    const { flowName, userInfo, flowStep, message, flowSection } = messageData;
     console.log("firestore recieved", messageData);
     const userId = userInfo.WaId;
     const existingFlowSnapshot = await db
@@ -22,6 +22,7 @@ async function createNewFlow({ db, messageData, extraData }) {
       flowName,
       userId,
       flowStep,
+      flowSection,
       ...extraData,
     };
     await db.collection("flows").doc(message.trackedFlowId).set(data);
@@ -158,13 +159,8 @@ async function createUserDetailUpdate({
     return null; // Return null if the document does not exist
   }
 }
-async function createCancelSurveyUpdate({
-  db,
-  flowId,
-  selectionValue,
-  cancellationMessages,
-}) {
-  const cancelSurvey = cancellationMessages.includes(selectionValue);
+async function createCancelSurveyUpdate({ db, flowId, selectionValue }) {
+  const cancelSurvey = selectionValue === "false";
   const flowRef = db.collection("flows").doc(flowId);
   if (cancelSurvey) {
     await flowRef.update({

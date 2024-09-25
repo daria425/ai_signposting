@@ -29,7 +29,13 @@ class BaseMessageHandler {
     this.res = res;
     this.clientSideTriggered = clientSideTriggered;
   }
-  createMessageData({ userData, flowName, trackedFlowId, flowStep }) {
+  createMessageData({
+    userData,
+    flowName,
+    trackedFlowId,
+    flowStep,
+    flowSection,
+  }) {
     return {
       userInfo: userData,
       organizationPhoneNumber: this.organizationPhoneNumber,
@@ -40,6 +46,7 @@ class BaseMessageHandler {
       },
       flowName,
       flowStep,
+      flowSection,
       startTime: new Date(),
     };
   }
@@ -121,6 +128,7 @@ class MessageHandlerService extends BaseMessageHandler {
       flowName,
       trackedFlowId,
       flowStep: 1,
+      flowSection: 1,
     });
     await createNewFlow({ db: this.firestore, messageData, extraData });
     await this.databaseService.saveFlow({
@@ -181,6 +189,7 @@ class MessageHandlerService extends BaseMessageHandler {
       flowName,
       trackedFlowId: flowId,
       flowStep: updatedFlowStep,
+      flowSection: 1,
     });
     await this.databaseService.updateFlow(flowId, "in_progress");
     if (flowName === "signposting") {
@@ -195,6 +204,11 @@ class MessageHandlerService extends BaseMessageHandler {
       );
     } else if (flowName === "survey") {
       messageData.cancelSurvey = await this.updateSurveyCancellation(flowId);
+      const buttonPayload = this.body?.ButtonPayload ?? ""; // Default to empty string if ButtonPayload doesn't exist
+      const nextSection = buttonPayload.split("-")[1] === "next_section";
+      if (nextSection) {
+        messageData.flowSection += 1;
+      }
     }
     console.log("message to be sent", messageData);
     await this.processFlowResponse({
@@ -229,8 +243,7 @@ class MessageHandlerService extends BaseMessageHandler {
     const updatedDoc = await createCancelSurveyUpdate({
       db: this.firestore,
       flowId,
-      cancellationMessages: this.cancellationMessages,
-      selectionValue: this.body.Body,
+      selectionValue: this.body.ButtonPayload,
     });
     return updatedDoc.cancelSurvey;
   }
@@ -312,6 +325,7 @@ class FlowTriggerService extends BaseMessageHandler {
       flowName,
       trackedFlowId,
       flowStep: 1,
+      flowSection: 1,
     });
     await this.databaseService.saveFlow({
       WaId: userData.WaId,
@@ -320,6 +334,7 @@ class FlowTriggerService extends BaseMessageHandler {
       clientSideTriggered: this.clientSideTriggered,
     });
     //HERE WE DONT SAVE THE MESSAGE BECAUSE IT ISNT AN ACTUAL WHATSAPP MESSAGE
+
     await createNewFlow({ db: this.firestore, messageData });
     await this.postRequestService.make_request(
       `flows/${flowName}`,
