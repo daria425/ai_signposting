@@ -6,7 +6,7 @@ const { formatTag } = require("../helpers/format.helpers");
 const { generateProfileColor } = require("../utils/generateProfileColor");
 const { sendMessage } = require("../helpers/twilio.helpers");
 const { findTemplateSid } = require("../helpers/twilio_account.helpers");
-
+const { surveyConfig } = require("../config/survey.config");
 class BaseFlow {
   constructor(
     db,
@@ -108,7 +108,6 @@ class OnboardingFlow extends BaseFlow {
     organizationPhoneNumber
   ) {
     super(db, userInfo, userMessage, contactModel, organizationPhoneNumber);
-    this.flowName = OnboardingFlow.FLOW_NAME;
   }
   async handleFlowStep(flowStep) {
     let flowCompletionStatus = false;
@@ -216,7 +215,6 @@ class SignpostingFlow extends BaseFlow {
     organizationPhoneNumber
   ) {
     super(db, userInfo, userMessage, contactModel, organizationPhoneNumber);
-    this.flowName = "signposting";
     this.signpostingTemplates = {};
   }
   async init() {
@@ -289,7 +287,7 @@ class SignpostingFlow extends BaseFlow {
       );
       const insertedId = await this.saveResponseMessage({
         message: templateMessage,
-        flowName: this.flowName,
+        flowName: SignpostingFlow.FLOW_NAME,
         templateName,
       });
       const sid = await sendMessage(templateMessage);
@@ -366,7 +364,7 @@ class SignpostingFlow extends BaseFlow {
               );
             const insertedId = await this.saveResponseMessage({
               message: lastMessage,
-              flowName: this.flowName,
+              flowName: SignpostingFlow.FLOW_NAME,
               templateName,
             });
             const sid = await sendMessage(lastMessage);
@@ -500,8 +498,53 @@ class EditDetailsFlow extends BaseFlow {
     return flowCompletionStatus;
   }
 }
+
+class FatMacysSurveyFlow extends BaseFlow {
+  static FLOW_NAME = "survey";
+  constructor(
+    db,
+    userInfo,
+    userMessage,
+    contactModel,
+    organizationPhoneNumber
+  ) {
+    super(db, userInfo, userMessage, contactModel, organizationPhoneNumber);
+  }
+  async handleFlowStep(flowStep, cancelSurvey) {
+    let flowCompletionStatus = false;
+    if (cancelSurvey) {
+      const message = this.createCancellationMessage(this.WaId);
+      await this.saveAndSendTextMessage(message, FatMacysSurveyFlow.FLOW_NAME);
+      flowCompletionStatus = true;
+      return flowCompletionStatus;
+    }
+    switch (flowStep) {
+      case 1:
+        await this.handleTemplateMessage({ templateKey: "survey_intro" });
+        break;
+    }
+    return flowCompletionStatus;
+  }
+  async handleTemplateMessage({ templateKey, templateVariables, updateData }) {
+    if (updateData) {
+      await this.updateUser(updateData);
+    }
+    await this.saveAndSendTemplateMessage({
+      templateKey,
+      templateVariables,
+      flowName: FatMacysSurveyFlow.FLOW_NAME,
+    });
+  }
+  createCancellationMessage(recipient) {
+    const text = "No worries!";
+    const message = createTextMessage(recipient, text);
+    return message;
+  }
+}
+
 module.exports = {
   OnboardingFlow,
   SignpostingFlow,
   EditDetailsFlow,
+  FatMacysSurveyFlow,
 };

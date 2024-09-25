@@ -3,6 +3,7 @@ async function createNewFlow({ db, messageData, extraData }) {
   try {
     const startTime = new Date().toISOString();
     const { flowName, userInfo, flowStep, message } = messageData;
+    console.log("firestore recieved", messageData);
     const userId = userInfo.WaId;
     const existingFlowSnapshot = await db
       .collection("flows")
@@ -157,6 +158,28 @@ async function createUserDetailUpdate({
     return null; // Return null if the document does not exist
   }
 }
+async function createCancelSurveyUpdate({
+  db,
+  flowId,
+  selectionValue,
+  cancellationMessages,
+}) {
+  const cancelSurvey = cancellationMessages.includes(selectionValue);
+  const flowRef = db.collection("flows").doc(flowId);
+  if (cancelSurvey) {
+    await flowRef.update({
+      "cancelSurvey": true,
+    });
+  }
+  const updatedDoc = await flowRef.get();
+
+  if (updatedDoc.exists) {
+    return updatedDoc.data();
+  } else {
+    console.log("No such document!");
+    return null;
+  }
+}
 module.exports = {
   createNewFlow,
   getCurrentFlow,
@@ -164,4 +187,5 @@ module.exports = {
   updateUserSelection,
   deleteFlowOnErr,
   createUserDetailUpdate,
+  createCancelSurveyUpdate,
 };

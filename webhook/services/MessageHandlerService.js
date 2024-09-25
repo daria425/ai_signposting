@@ -5,6 +5,7 @@ const {
   deleteFlowOnErr,
   updateUserSelection,
   createUserDetailUpdate,
+  createCancelSurveyUpdate,
 } = require("../helpers/firestore.helpers");
 const { v4: uuidv4 } = require("uuid");
 const { logMessageAsJSON } = require("../helpers/logging.helpers"); //eslint-disable-line
@@ -60,6 +61,7 @@ class MessageHandlerService extends BaseMessageHandler {
     });
     this.seeMoreOptionMessages = ["See More Options", "That's great, thanks"];
     this.addUpdateMessages = ["Yes", "No thanks"];
+    this.cancellationMessages = ["No thanks sorry"];
   }
 
   async handle() {
@@ -191,6 +193,8 @@ class MessageHandlerService extends BaseMessageHandler {
         flowId,
         flowStep
       );
+    } else if (flowName === "survey") {
+      messageData.cancelSurvey = await this.updateSurveyCancellation(flowId);
     }
     console.log("message to be sent", messageData);
     await this.processFlowResponse({
@@ -221,6 +225,15 @@ class MessageHandlerService extends BaseMessageHandler {
     return updatedDoc?.userDetailUpdate;
   }
 
+  async updateSurveyCancellation(flowId) {
+    const updatedDoc = await createCancelSurveyUpdate({
+      db: this.firestore,
+      flowId,
+      cancellationMessages: this.cancellationMessages,
+      selectionValue: this.body.Body,
+    });
+    return updatedDoc.cancelSurvey;
+  }
   async processFlowResponse({ flowName, messageToSave, messageData, flowId }) {
     const response = await this.postRequestService.make_request(
       `flows/${flowName}`,

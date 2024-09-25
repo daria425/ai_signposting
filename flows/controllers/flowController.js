@@ -2,11 +2,35 @@ const {
   OnboardingFlow,
   SignpostingFlow,
   EditDetailsFlow,
+  FatMacysSurveyFlow,
 } = require("../services/Flows");
 const { SupportOptionService } = require("../services/SupportOptionService");
 const { ContactModel } = require("../models/ContactModel");
 const { api_base } = require("../config/llm_api.config");
 const { LLMService } = require("../services/LLMService");
+
+async function runSurveyFlow({
+  db,
+  contactModel,
+  userInfo,
+  flowStep,
+  userMessage,
+  organizationPhoneNumber,
+  cancelSurvey,
+}) {
+  const surveyFlow = new FatMacysSurveyFlow(
+    db,
+    userInfo,
+    userMessage,
+    contactModel,
+    organizationPhoneNumber
+  );
+  const flowCompletionStatus = await surveyFlow.handleFlowStep(
+    flowStep,
+    cancelSurvey
+  );
+  return flowCompletionStatus;
+}
 async function runOnboardingFlow({
   db,
   contactModel,
@@ -118,6 +142,17 @@ async function flowController(req, res, next) {
         userMessage: message,
         organizationPhoneNumber,
         userDetailUpdate,
+      });
+    } else if (flow === "survey") {
+      const cancelSurvey = req.body.cancelSurvey;
+      flowCompletionStatus = await runSurveyFlow({
+        db,
+        contactModel,
+        userInfo,
+        flowStep,
+        userMessage: message,
+        organizationPhoneNumber,
+        cancelSurvey,
       });
     }
     res.status(200).send({ flowCompletionStatus });
