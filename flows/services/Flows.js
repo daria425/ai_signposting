@@ -518,7 +518,7 @@ class FatMacysSurveyFlow extends BaseFlow {
       flowCompletionStatus = true;
       return flowCompletionStatus;
     }
-    if (flowStep === 1) {
+    if (flowStep === 1 && flowSection === 1) {
       //FLOW STARTS HERE
       await this.handleTemplateMessage({ templateKey: "survey_intro" });
     } else {

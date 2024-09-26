@@ -6,6 +6,7 @@ const {
   updateUserSelection,
   createUserDetailUpdate,
   createCancelSurveyUpdate,
+  createNextSectionUpdate,
 } = require("../helpers/firestore.helpers");
 const { v4: uuidv4 } = require("uuid");
 const { logMessageAsJSON } = require("../helpers/logging.helpers"); //eslint-disable-line
@@ -205,10 +206,17 @@ class MessageHandlerService extends BaseMessageHandler {
     } else if (flowName === "survey") {
       messageData.cancelSurvey = await this.updateSurveyCancellation(flowId);
       const buttonPayload = this.body?.ButtonPayload ?? ""; // Default to empty string if ButtonPayload doesn't exist
-      const nextSection = buttonPayload.split("-")[1] === "next_section";
-      if (nextSection) {
-        messageData.flowSection += 1;
-      }
+      const nextSection =
+        buttonPayload.split("-")[1] === "next_section" ||
+        (messageData.flowSection == 2 && messageData.flowStep == 5);
+      const updatedDoc = await createNextSectionUpdate(
+        this.firestore,
+        this.body.WaId,
+        nextSection
+      );
+      messageData.flowSection = updatedDoc.flowSection;
+      messageData.flowStep = updatedDoc.flowStep;
+      console.log(updatedDoc, nextSection);
     }
     console.log("message to be sent", messageData);
     await this.processFlowResponse({

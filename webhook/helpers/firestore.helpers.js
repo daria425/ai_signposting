@@ -176,6 +176,33 @@ async function createCancelSurveyUpdate({ db, flowId, selectionValue }) {
     return null;
   }
 }
+
+async function createNextSectionUpdate(db, WaId, nextSection) {
+  try {
+    const currentFlowSnapshot = await db
+      .collection("flows")
+      .where("userId", "==", WaId)
+      .get();
+    if (!currentFlowSnapshot.empty) {
+      const firstDoc = currentFlowSnapshot.docs[0]; //TO-DO: get the most recent flow here
+      const data = firstDoc.data();
+      if (!nextSection) {
+        return data;
+      }
+      const updateId = firstDoc.id;
+      const currentSection = data.flowSection;
+      await db
+        .collection("flows")
+        .doc(updateId)
+        .update({ "flowStep": 1, "flowSection": currentSection + 1 });
+      const updatedDoc = await db.collection("flows").doc(updateId).get();
+      return updatedDoc.data();
+    }
+  } catch (err) {
+    console.error("An error occurred getting the current flow", err);
+    throw new Error("Error in getting current flow");
+  }
+}
 module.exports = {
   createNewFlow,
   getCurrentFlow,
@@ -184,4 +211,5 @@ module.exports = {
   deleteFlowOnErr,
   createUserDetailUpdate,
   createCancelSurveyUpdate,
+  createNextSectionUpdate,
 };

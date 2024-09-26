@@ -23,13 +23,64 @@ const surveyConfig = {
     },
   },
   2: {
-    5: {
+    1: {
       responseContent: {
         templateVariables:
           "Great\n\nSection 2 of 6: Workplace training\n\nWhen answering these questions, think about the training hours you’ve completed in the restaurant or at events at other venues.\n\n2A) Have you completed any training with Fat Macy’s in the past 6 months?\n\nThis could include your trial session, or at Sohaila, events or at the Lexington cafe",
       },
       responseType: "template",
       templateKey: "survey_2a",
+    },
+    2: {
+      responseContent: {
+        templateVariables: "2B) How would you rate the training?",
+      },
+      responseType: "template",
+      templateKey: "survey_2b",
+    },
+    3: {
+      responseContent:
+        "2C) Please complete this sentence using a voice note or text message:\n\n'When I think about my training hours with Fat Macy's, I feel...'",
+      responseType: "text",
+      templateKey: null,
+    },
+    4: {
+      responseContent:
+        "2D) Thank you for sharing. We often have sessions on the rota which we cannot fill. How could Fat Macy’s support you to complete more hours?\n\nPlease answer using a voice note or text message",
+      responseType: "text",
+      templateKey: null,
+    },
+  },
+  3: {
+    1: {
+      responseContent: {
+        templateVariables:
+          "Thanks for sharing your thoughts!\n\nSection 3 of 6: The Lexington\n\n3A) Have you completed any training sessions with the Lexington?",
+      },
+      responseType: "template",
+      templateKey: "survey_2a", //3A is same as 2A no need for new template here
+    },
+    2: {
+      responseContent: {
+        templateVariables:
+          "3B) How would you rate the training you have received from the Lexington team?",
+      },
+      responseType: "template",
+      templateKey: "survey_2b",
+    },
+    3: {
+      responseContent: {
+        templateVariables:
+          "3C) How would you rate your experience of communicating and working with the Lexington team generally?",
+      },
+      responseType: "template",
+      templateKey: "survey_2b",
+    },
+    4: {
+      responseContent:
+        "3D) Please complete this sentence using a voice note or text message:\n\n'When I think about my sessions with Lexington, I feel...'",
+      responseType: "text",
+      templateKey: null,
     },
   },
 };
