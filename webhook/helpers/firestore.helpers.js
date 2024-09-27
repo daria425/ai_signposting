@@ -177,15 +177,18 @@ async function createCancelSurveyUpdate({ db, flowId, selectionValue }) {
   }
 }
 
-async function createNextSectionUpdate(db, WaId, nextSection) {
+async function createNextSectionUpdate(db, WaId, buttonPayload) {
   try {
     const currentFlowSnapshot = await db
       .collection("flows")
       .where("userId", "==", WaId)
       .get();
     if (!currentFlowSnapshot.empty) {
-      const firstDoc = currentFlowSnapshot.docs[0]; //TO-DO: get the most recent flow here
+      const firstDoc = currentFlowSnapshot.docs[0];
       const data = firstDoc.data();
+      const nextSection =
+        buttonPayload.split("-")[1] === "next_section" ||
+        (data.flowSection == 2 && data.flowStep == 5);
       if (!nextSection) {
         return data;
       }

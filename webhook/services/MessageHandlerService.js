@@ -206,17 +206,14 @@ class MessageHandlerService extends BaseMessageHandler {
     } else if (flowName === "survey") {
       messageData.cancelSurvey = await this.updateSurveyCancellation(flowId);
       const buttonPayload = this.body?.ButtonPayload ?? ""; // Default to empty string if ButtonPayload doesn't exist
-      const nextSection =
-        buttonPayload.split("-")[1] === "next_section" ||
-        (messageData.flowSection == 2 && messageData.flowStep == 5);
       const updatedDoc = await createNextSectionUpdate(
         this.firestore,
         this.body.WaId,
-        nextSection
+        buttonPayload
       );
       messageData.flowSection = updatedDoc.flowSection;
       messageData.flowStep = updatedDoc.flowStep;
-      console.log(updatedDoc, nextSection);
+      console.log("update data", updatedDoc);
     }
     console.log("message to be sent", messageData);
     await this.processFlowResponse({
