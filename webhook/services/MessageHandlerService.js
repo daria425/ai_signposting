@@ -213,9 +213,9 @@ class MessageHandlerService extends BaseMessageHandler {
       );
       messageData.flowSection = updatedDoc.flowSection;
       messageData.flowStep = updatedDoc.flowStep;
-      console.log("update data", updatedDoc);
+
+      console.log("response field will be");
     }
-    console.log("message to be sent", messageData);
     await this.processFlowResponse({
       flowName,
       messageToSave,

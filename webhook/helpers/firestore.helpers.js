@@ -188,7 +188,11 @@ async function createNextSectionUpdate(db, WaId, buttonPayload) {
       const data = firstDoc.data();
       const nextSection =
         buttonPayload.split("-")[1] === "next_section" ||
-        (data.flowSection == 2 && data.flowStep == 5);
+        (data.flowSection == 2 && data.flowStep == 5) ||
+        (data.flowSection == 3 && data.flowStep == 5) ||
+        (data.flowSection == 4 && data.flowStep == 3) ||
+        (data.flowSection == 5 && data.flowStep == 4) ||
+        (data.flowSection == 6 && data.flowStep == 7);
       if (!nextSection) {
         return data;
       }

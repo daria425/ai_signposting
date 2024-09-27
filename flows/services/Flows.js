@@ -501,6 +501,8 @@ class EditDetailsFlow extends BaseFlow {
 
 class FatMacysSurveyFlow extends BaseFlow {
   static FLOW_NAME = "survey";
+  static LAST_SECTION = 7;
+  static LAST_STEP = 6;
   constructor(
     db,
     userInfo,
@@ -524,6 +526,12 @@ class FatMacysSurveyFlow extends BaseFlow {
     } else {
       const { responseContent, responseType, templateKey } =
         surveyConfig[flowSection][flowStep];
+      if (
+        flowStep === FatMacysSurveyFlow.LAST_STEP &&
+        flowSection === FatMacysSurveyFlow.LAST_SECTION
+      ) {
+        flowCompletionStatus = true;
+      }
       if (responseType === "text") {
         const message = createTextMessage(this.WaId, responseContent);
         await this.saveAndSendTextMessage(
