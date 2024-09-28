@@ -96,7 +96,7 @@ class DatabaseService {
         { $set: { Status: status } }
       );
       if (updatedMessage.clientSideTriggered) {
-        await this.updateFlow(updatedMessage.trackedFlowId, status);
+        await this.updateFlowStatus(updatedMessage.trackedFlowId, status);
       }
       console.log(`Message status updated to ${status}`);
     } catch (err) {
@@ -121,13 +121,56 @@ class DatabaseService {
       console.error(err);
     }
   }
-  async updateFlow(flowId, statusUpdate) {
+  async updateFlowStatus(flowId, statusUpdate) {
     await this.sentFlowsCollection.findOneAndUpdate(
       { "trackedFlowId": flowId },
       {
         $set: {
           Status: statusUpdate,
           UpdatedAt: new Date(),
+        },
+      }
+    );
+  }
+  async updateFlowSurvey(flowId, update) {
+    await this.sentFlowsCollection.findOneAndUpdate(
+      { "trackedFlowId": flowId },
+      {
+        $push: {
+          surveyResponses: { ...update, CreatedAt: new Date() },
+        },
+      }
+    );
+  }
+  async updateFlowWithResponse(flowId, userResponse) {
+    const flow = await this.sentFlowsCollection.findOne({
+      "trackedFlowId": flowId,
+    });
+
+    const existingSurveyData = flow?.surveyResponses;
+    if (!existingSurveyData || existingSurveyData.length === 0) {
+      return; // No survey data exists
+    }
+
+    // Sort the surveyResponses by createdAt and get the most recent one
+    const latestSurvey = existingSurveyData.sort(
+      (a, b) => new Date(b.CreatedAt) - new Date(a.CreatedAt)
+    )[0];
+
+    // If no latestSurvey was found, return
+    if (!latestSurvey) {
+      return;
+    }
+
+    // Now update the document with the latest survey object modified
+    await this.sentFlowsCollection.updateOne(
+      {
+        "trackedFlowId": flowId,
+        "surveyResponses.CreatedAt": latestSurvey.CreatedAt,
+      }, // Match on trackedFlowId and latest createdAt
+      {
+        $set: {
+          "surveyResponses.$.userResponse": userResponse, // Add the userResponse property to the latest survey response
         },
       }
     );

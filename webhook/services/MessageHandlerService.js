@@ -13,6 +13,7 @@ const { logMessageAsJSON } = require("../helpers/logging.helpers"); //eslint-dis
 const { PostRequestService } = require("./PostRequestService");
 const { api_base } = require("../config/api_base.config");
 const { DatabaseService } = require("./DatabaseService");
+const { surveyConfig } = require("../config/survey.config");
 
 class BaseMessageHandler {
   constructor({
@@ -192,7 +193,7 @@ class MessageHandlerService extends BaseMessageHandler {
       flowStep: updatedFlowStep,
       flowSection: 1,
     });
-    await this.databaseService.updateFlow(flowId, "in_progress");
+    await this.databaseService.updateFlowStatus(flowId, "in_progress");
     if (flowName === "signposting") {
       messageData.userSelection = await this.updateUserSignpostingSelection(
         flowId,
@@ -204,6 +205,7 @@ class MessageHandlerService extends BaseMessageHandler {
         flowStep
       );
     } else if (flowName === "survey") {
+      await this.databaseService.updateFlowWithResponse(flowId, this.body.Body);
       messageData.cancelSurvey = await this.updateSurveyCancellation(flowId);
       const buttonPayload = this.body?.ButtonPayload ?? ""; // Default to empty string if ButtonPayload doesn't exist
       const updatedDoc = await createNextSectionUpdate(
@@ -213,9 +215,15 @@ class MessageHandlerService extends BaseMessageHandler {
       );
       messageData.flowSection = updatedDoc.flowSection;
       messageData.flowStep = updatedDoc.flowStep;
-
-      console.log("response field will be");
+      const { questionContent, questionNumber } =
+        surveyConfig[updatedDoc.flowSection][updatedDoc.flowStep];
+      const surveyResponse = {
+        questionContent,
+        questionNumber,
+      };
+      await this.databaseService.updateFlowSurvey(flowId, surveyResponse);
     }
+    console.log("message to be sent", messageData);
     await this.processFlowResponse({
       flowName,
       messageToSave,
@@ -258,7 +266,7 @@ class MessageHandlerService extends BaseMessageHandler {
       messageData
     );
     if (response.data.flowCompletionStatus) {
-      await this.databaseService.updateFlow(flowId, "completed");
+      await this.databaseService.updateFlowStatus(flowId, "completed");
       await deleteFlowOnCompletion(this.firestore, flowId);
     }
     const updatedMessageToSave = {
