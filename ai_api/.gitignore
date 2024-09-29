@@ -1,7 +1,6 @@
 .env
 __pycache__
 .ipynb_checkpoints/
-test_messages.json
-data/
 app.yaml
 .gcloudignore
+audio_downloads/
