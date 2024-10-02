@@ -6,7 +6,7 @@ from .routes import llm, transcription
 app = FastAPI()
 
 origins=[
-  "http://localhost:8080", "https://ai-signposting.nw.r.appspot.com"
+  "http://localhost:8080", "https://ai-signposting.nw.r.appspot.com", "http://localhost:3000"
 ]
 
 app.add_middleware(    
