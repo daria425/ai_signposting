@@ -11,7 +11,10 @@ const {
 const { v4: uuidv4 } = require("uuid");
 const { logMessageAsJSON } = require("../helpers/logging.helpers"); //eslint-disable-line
 const { PostRequestService } = require("./PostRequestService");
-const { api_base } = require("../config/api_base.config");
+const {
+  flow_api_base,
+  transcription_api_base,
+} = require("../config/api_base.config");
 const { DatabaseService } = require("./DatabaseService");
 const { surveyConfig } = require("../config/survey.config");
 
@@ -23,7 +26,10 @@ class BaseMessageHandler {
     firestore,
     clientSideTriggered,
   }) {
-    this.postRequestService = new PostRequestService(api_base);
+    this.postRequestService = new PostRequestService(
+      flow_api_base,
+      transcription_api_base
+    );
     this.databaseService = new DatabaseService(req.app.locals.db);
     this.organizationPhoneNumber = organizationPhoneNumber;
     this.firestore = firestore;
@@ -149,6 +155,12 @@ class MessageHandlerService extends BaseMessageHandler {
       messageData
     );
     await this.databaseService.saveMessage(updatedMessageToSave);
+    if (updatedMessageToSave.MessageType === "audio") {
+      await this.postRequestService.send_transcription_data("transcription", {
+        MediaUrl0: updatedMessageToSave.MediaUrl0,
+        MessageSid: updatedMessageToSave.MessageSid,
+      });
+    }
     this.res.status(200).send(response.data);
   }
 
@@ -218,7 +230,11 @@ class MessageHandlerService extends BaseMessageHandler {
         flowStep
       );
     } else if (flowName === "survey") {
-      await this.databaseService.updateFlowWithResponse(flowId, this.body.Body);
+      await this.databaseService.updateFlowWithResponse(
+        flowId,
+        this.body.Body,
+        this.body.MessageSid
+      );
       messageData.cancelSurvey = await this.updateSurveyCancellation(flowId);
       const buttonPayload = this.body?.ButtonPayload ?? ""; // Default to empty string if ButtonPayload doesn't exist
       const updatedDoc = await createNextSectionUpdate(
@@ -228,6 +244,7 @@ class MessageHandlerService extends BaseMessageHandler {
       );
       messageData.flowSection = updatedDoc.flowSection;
       messageData.flowStep = updatedDoc.flowStep;
+      console.log("messageData here!!", messageData);
       const { questionContent, questionNumber } =
         surveyConfig?.[updatedDoc.flowSection]?.[updatedDoc.flowStep] || {};
       if (questionContent && questionNumber) {
@@ -289,6 +306,12 @@ class MessageHandlerService extends BaseMessageHandler {
       trackedFlowId: flowId,
     };
     await this.databaseService.saveMessage(updatedMessageToSave);
+    if (updatedMessageToSave.MessageType === "audio") {
+      await this.postRequestService.send_transcription_data("transcription", {
+        MediaUrl0: updatedMessageToSave.MediaUrl0,
+        MessageSid: updatedMessageToSave.MessageSid,
+      });
+    }
     this.res.status(200).send(response.data);
   }
 }

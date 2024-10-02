@@ -142,7 +142,7 @@ class DatabaseService {
       }
     );
   }
-  async updateFlowWithResponse(flowId, userResponse) {
+  async updateFlowWithResponse(flowId, userResponse, messageSid) {
     const flow = await this.sentFlowsCollection.findOne({
       "trackedFlowId": flowId,
     });
@@ -160,7 +160,8 @@ class DatabaseService {
       },
       {
         $set: {
-          "surveyResponses.$.userResponse": userResponse, // Add the userResponse property to the latest survey response
+          "surveyResponses.$.userResponse": userResponse,
+          "surveyResponses.$.originalMessageSid": messageSid, // Add the userResponse property to the latest survey response
         },
       }
     );
