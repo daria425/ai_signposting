@@ -5,17 +5,26 @@ async function createNewFlow({ db, messageData, extraData }) {
     const { flowName, userInfo, flowStep, message, flowSection } = messageData;
     console.log("firestore recieved", messageData);
     const userId = userInfo.WaId;
+    console.log("reached 1");
+    console.log("firestore:", db);
     const existingFlowSnapshot = await db
       .collection("flows")
       .where("userId", "==", userId)
       .get();
+
     if (!existingFlowSnapshot.empty) {
       const batch = db.batch();
       existingFlowSnapshot.forEach((doc) => {
+        console.log(`Deleting document with id: ${doc.id}`);
         batch.delete(doc.ref);
       });
+      console.log("Committing batch deletion...");
       await batch.commit();
+      console.log("Batch commit successful");
+    } else {
+      console.log("No existing flows found for user:", userId);
     }
+    console.log("reached 2");
     extraData = extraData || {};
     const data = {
       startTime,

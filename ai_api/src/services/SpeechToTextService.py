@@ -1,18 +1,19 @@
 import requests
 from google.cloud import speech
 from requests.auth import HTTPBasicAuth
+from ..config.speech_api_config import transcribe_client
+from ..config.storage_api_config import bucket, bucket_name
 import os
 import tempfile
 import shutil
 from dotenv import load_dotenv
 load_dotenv()
-media_url=os.environ.get("TEST_MEDIA_URL")
 username=os.environ.get("TWILIO_ACCOUNT_SID")
 password=os.environ.get("TWILIO_AUTH_TOKEN")
 
 
 class SpeechToTextService:
-    def __init__(self, bucket, bucket_name, transcribe_client):
+    def __init__(self):
         self.bucket=bucket
         self.bucket_name=bucket_name
         self.transcribe_client=transcribe_client
@@ -22,7 +23,7 @@ class SpeechToTextService:
         basic_auth=HTTPBasicAuth(username, password)
         try:
             file_name=audio_url.split("/")[-1]
-            response=requests.get(media_url, auth=basic_auth)
+            response=requests.get(audio_url, auth=basic_auth)
             if response.status_code==200:
                 content_type = response.headers.get('Content-Type')
                 extension = content_type.split('/')[-1]
@@ -66,6 +67,7 @@ class SpeechToTextService:
     )
         response=self.transcribe_client.recognize(config=config, audio=audio)
         transcription = ''
+        print(response.results)
         for result in response.results:
             transcription += result.alternatives[0].transcript
 
