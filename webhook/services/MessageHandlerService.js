@@ -8,6 +8,7 @@ const {
   createCancelSurveyUpdate,
   createNextSectionUpdate,
 } = require("../helpers/firestore.helpers");
+const { createTranscriptionTask } = require("../helpers/cloud_tasks.helpers");
 const { v4: uuidv4 } = require("uuid");
 const { logMessageAsJSON } = require("../helpers/logging.helpers"); //eslint-disable-line
 const { PostRequestService } = require("./PostRequestService");
@@ -156,10 +157,10 @@ class MessageHandlerService extends BaseMessageHandler {
     );
     await this.databaseService.saveMessage(updatedMessageToSave);
     if (updatedMessageToSave.MessageType === "audio") {
-      await this.postRequestService.send_transcription_data("transcription", {
-        MediaUrl0: updatedMessageToSave.MediaUrl0,
-        MessageSid: updatedMessageToSave.MessageSid,
-      });
+      await createTranscriptionTask(
+        updatedMessageToSave.MediaUrl0,
+        updatedMessageToSave.MessageSid
+      );
     }
     this.res.status(200).send(response.data);
   }
@@ -307,10 +308,10 @@ class MessageHandlerService extends BaseMessageHandler {
     };
     await this.databaseService.saveMessage(updatedMessageToSave);
     if (updatedMessageToSave.MessageType === "audio") {
-      await this.postRequestService.send_transcription_data("transcription", {
-        MediaUrl0: updatedMessageToSave.MediaUrl0,
-        MessageSid: updatedMessageToSave.MessageSid,
-      });
+      await createTranscriptionTask(
+        updatedMessageToSave.MediaUrl0,
+        updatedMessageToSave.MessageSid
+      );
     }
     this.res.status(200).send(response.data);
   }

@@ -3,9 +3,9 @@ from ..models.TranscriptionDataModel import TranscriptionDataModel
 from ..services.SpeechToTextService import SpeechToTextService
 from ..services.DatabaseService import get_database_service, DatabaseService    
 from pymongo import errors
-router=APIRouter(prefix="/transcription")
+router=APIRouter(prefix="/tasks")
 
-@router.post("/")
+@router.post("/transcription")
 def create_transcription(request_body: TranscriptionDataModel, db_service: DatabaseService = Depends(get_database_service)):
     media_url=request_body.MediaUrl0
     message_sid=request_body.MessageSid
