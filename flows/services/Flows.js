@@ -526,12 +526,23 @@ class FatMacysSurveyFlow extends BaseFlow {
     } else {
       const { responseContent, responseType, templateKey } =
         surveyConfig[flowSection][flowStep];
+      console.log(`user says ${this.messageContent}`);
       if (
         flowStep === FatMacysSurveyFlow.LAST_STEP &&
         flowSection === FatMacysSurveyFlow.LAST_SECTION
       ) {
         flowCompletionStatus = true;
       }
+      const shareName =
+        flowSection === 1 && flowStep === 4 && this.messageContent === "Yes";
+      const isContactable =
+        flowSection === 1 && flowStep === 5 && this.messageContent === "Yes";
+      const updateData = {
+        ProfileName: shareName ? undefined : "Anon",
+        username: shareName ? undefined : "Anon",
+        isContactable,
+      };
+      await this.updateUser(updateData);
       if (responseType === "text") {
         const message = createTextMessage(this.WaId, responseContent);
         await this.saveAndSendTextMessage(
@@ -547,10 +558,7 @@ class FatMacysSurveyFlow extends BaseFlow {
     }
     return flowCompletionStatus;
   }
-  async handleTemplateMessage({ templateKey, templateVariables, updateData }) {
-    if (updateData) {
-      await this.updateUser(updateData);
-    }
+  async handleTemplateMessage({ templateKey, templateVariables }) {
     await this.saveAndSendTemplateMessage({
       templateKey,
       templateVariables,

@@ -37,10 +37,13 @@ class ContactModel {
 
   async updateContact(recipient, updateDoc) {
     const update = { ...updateDoc, "LastSeenAt": new Date() };
+    const filteredUpdate = Object.fromEntries(
+      Object.entries(update).filter(([_, val]) => val !== undefined)
+    );
     try {
       await this.collection.findOneAndUpdate(
         { "WaId": recipient },
-        { "$set": update }
+        { "$set": filteredUpdate }
       );
     } catch (err) {
       console.log(err);
