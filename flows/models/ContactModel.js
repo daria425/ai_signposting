@@ -1,21 +1,29 @@
 class ContactModel {
-  constructor(db, messageStartTime) {
-    this.collection = db.collection("contacts");
+  constructor(db, messageStartTime, organizationPhoneNumber) {
+    this.contactsCollection = db.collection("contacts");
     this.messageCollection = db.collection("messages");
+    this.organizationsCollection = db.collection("organizations");
+    this.organizationPhoneNumber = organizationPhoneNumber;
     this.messageStartTime = new Date(messageStartTime);
   }
   async saveContact(contactData) {
     try {
-      const contact = await this.collection.findOne({
+      const contact = await this.contactsCollection.findOne({
         "WaId": contactData.WaId,
       });
       if (contact) {
         return;
-      } else
-        await this.collection.insertOne({
+      } else {
+        const contactOrganization = await this.organizationsCollection.findOne({
+          "organizationPhoneNumber": this.organizationPhoneNumber,
+        });
+        const contactOrganizationId = contactOrganization._id;
+        await this.contactsCollection.insertOne({
           "WaId": contactData.WaId,
           "ProfileName": contactData.ProfileName,
+          "organizationId": contactOrganizationId,
         });
+      }
     } catch (err) {
       console.log(err);
     }
@@ -23,7 +31,14 @@ class ContactModel {
 
   async getContact(recipient) {
     try {
-      const contact = await this.collection.findOne({ "WaId": recipient });
+      const contactOrganization = await this.organizationsCollection.findOne({
+        "organizationPhoneNumber": this.organizationPhoneNumber,
+      });
+      const contactOrganizationId = contactOrganization._id;
+      const contact = await this.contactsCollection.findOne({
+        "WaId": recipient,
+        "organizationId": contactOrganizationId,
+      });
       return contact;
     } catch (err) {
       console.log(err);
@@ -31,7 +46,14 @@ class ContactModel {
   }
 
   async getContactDetail(recipient, detailField) {
-    const contact = await this.collection.findOne({ "WaId": recipient });
+    const contactOrganization = await this.organizationsCollection.findOne({
+      "organizationPhoneNumber": this.organizationPhoneNumber,
+    });
+    const contactOrganizationId = contactOrganization._id;
+    const contact = await this.contactsCollection.findOne({
+      "WaId": recipient,
+      "organizationId": contactOrganizationId,
+    });
     return contact[detailField];
   }
 
@@ -41,8 +63,12 @@ class ContactModel {
       Object.entries(update).filter(([_, val]) => val !== undefined)
     );
     try {
-      await this.collection.findOneAndUpdate(
-        { "WaId": recipient },
+      const contactOrganization = await this.organizationsCollection.findOne({
+        "organizationPhoneNumber": this.organizationPhoneNumber,
+      });
+      const contactOrganizationId = contactOrganization._id;
+      await this.contactsCollection.findOneAndUpdate(
+        { "WaId": recipient, "organizationId": contactOrganizationId },
         { "$set": filteredUpdate }
       );
     } catch (err) {
@@ -51,8 +77,12 @@ class ContactModel {
   }
   async incrementContactField(recipient, update) {
     try {
-      await this.collection.findOneAndUpdate(
-        { "WaId": recipient },
+      const contactOrganization = await this.organizationsCollection.findOne({
+        "organizationPhoneNumber": this.organizationPhoneNumber,
+      });
+      const contactOrganizationId = contactOrganization._id;
+      await this.contactsCollection.findOneAndUpdate(
+        { "WaId": recipient, "organizationId": contactOrganizationId },
         { "$inc": update }
       );
     } catch (err) {

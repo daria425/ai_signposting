@@ -124,7 +124,11 @@ async function flowController(req, res, next) {
       console.log("req body", req.body);
     }
     const flow = req.params.flowName;
-    const contactModel = new ContactModel(controlRoomDb, startTime);
+    const contactModel = new ContactModel(
+      controlRoomDb,
+      startTime,
+      organizationPhoneNumber
+    );
     await contactModel.updateContact(userInfo.WaId, {});
     if (flow === "onboarding") {
       flowCompletionStatus = await runOnboardingFlow({
