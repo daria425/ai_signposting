@@ -1,8 +1,4 @@
-let messagingServiceSid = process.env.TEST_TWILIO_MESSAGING_SERVICE_SID;
-if (process.env.NODE_ENV !== "development") {
-  messagingServiceSid = process.env.TWILIO_MESSAGING_SERVICE_SID;
-}
-const createTextMessage = (waId, textContent) => {
+const createTextMessage = ({ waId, textContent, messagingServiceSid }) => {
   const message = {
     from: messagingServiceSid,
     body: textContent,
@@ -12,7 +8,12 @@ const createTextMessage = (waId, textContent) => {
   return message;
 };
 
-const createTemplateMessage = (waId, contentSid, templateVariables) => {
+const createTemplateMessage = ({
+  waId,
+  contentSid,
+  templateVariables,
+  messagingServiceSid,
+}) => {
   const message = {
     from: messagingServiceSid,
     contentSid: contentSid,

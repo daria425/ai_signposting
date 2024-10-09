@@ -36,6 +36,17 @@ class DatabaseService {
     }
   }
 
+  async getMessagingServiceSid(organizationPhoneNumber) {
+    try {
+      const organization = await this.organizationCollection.findOne({
+        "organizationPhoneNumber": organizationPhoneNumber,
+      });
+      return organization.organizationMessagingServiceSid;
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
+  }
   async saveUser(userData, organizationNumber) {
     try {
       const user = await this.contactCollection.findOne({

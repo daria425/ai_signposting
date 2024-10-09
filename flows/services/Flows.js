@@ -13,7 +13,8 @@ class BaseFlow {
     userInfo,
     userMessage,
     contactModel,
-    organizationPhoneNumber
+    organizationPhoneNumber,
+    organizationMessagingServiceSid
   ) {
     this.db = db;
     this.userInfo = userInfo;
@@ -22,6 +23,7 @@ class BaseFlow {
     this.listId = userMessage?.ListId;
     this.contactModel = contactModel;
     this.organizationPhoneNumber = organizationPhoneNumber;
+    this.messagingServiceSid = organizationMessagingServiceSid;
     this.trackedFlowId = userMessage.trackedFlowId;
     this.clientSideTriggered = userMessage.clientSideTriggered;
   }
@@ -33,7 +35,11 @@ class BaseFlow {
   async createErrorMessage(recipient) {
     const text =
       "An unexpected error occurred, please text 'hi' to search again";
-    const message = createTextMessage(recipient, text);
+    const message = createTextMessage({
+      waId: recipient,
+      textContent: text,
+      messagingServiceSid: this.messagingServiceSid,
+    });
     return message;
   }
   async saveResponseMessage({ message, flowName, templateName }) {
@@ -76,11 +82,12 @@ class BaseFlow {
       templateKey,
       false
     );
-    const templateMessage = createTemplateMessage(
-      this.WaId,
-      templateSid,
-      templateVariables
-    );
+    const templateMessage = createTemplateMessage({
+      waId: this.WaId,
+      contentSid: templateSid,
+      templateVariables,
+      messagingServiceSid: this.messagingServiceSid,
+    });
     const insertedId = await this.saveResponseMessage({
       message: templateMessage,
       flowName,
@@ -105,9 +112,17 @@ class OnboardingFlow extends BaseFlow {
     userInfo,
     userMessage,
     contactModel,
-    organizationPhoneNumber
+    organizationPhoneNumber,
+    organizationMessagingServiceSid
   ) {
-    super(db, userInfo, userMessage, contactModel, organizationPhoneNumber);
+    super(
+      db,
+      userInfo,
+      userMessage,
+      contactModel,
+      organizationPhoneNumber,
+      organizationMessagingServiceSid
+    );
   }
   async handleFlowStep(flowStep) {
     let flowCompletionStatus = false;
@@ -118,7 +133,11 @@ class OnboardingFlow extends BaseFlow {
       }
       case 2: {
         const text = OnboardingFlow.ONBOARDING_TEXTS[flowStep];
-        const message = createTextMessage(this.WaId, text);
+        const message = createTextMessage({
+          waId: this.WaId,
+          textContent: text,
+          messagingServiceSid: this.messagingServiceSid,
+        });
         await this.saveAndSendTextMessage(message, OnboardingFlow.FLOW_NAME);
         break;
       }
@@ -185,7 +204,11 @@ class OnboardingFlow extends BaseFlow {
   async handleUpdateAndResponse(updateData, flowStep) {
     await this.updateUser(updateData);
     const text = OnboardingFlow.ONBOARDING_TEXTS[flowStep];
-    const message = createTextMessage(this.WaId, text);
+    const message = createTextMessage({
+      waId: this.WaId,
+      textContent: text,
+      messagingServiceSid: this.messagingServiceSid,
+    });
     await this.saveAndSendTextMessage(message, OnboardingFlow.FLOW_NAME);
   }
   async handleTemplateMessage({ templateKey, templateVariables, updateData }) {
@@ -201,7 +224,11 @@ class OnboardingFlow extends BaseFlow {
   async handleLastMessage() {
     const text =
       "Thank you for registering with us. Please message 'hi' to begin a search";
-    const message = createTextMessage(this.WaId, text);
+    const message = createTextMessage({
+      waId: this.WaId,
+      textContent: text,
+      messagingServiceSid: this.messagingServiceSid,
+    });
     await this.saveAndSendTextMessage(message, OnboardingFlow.FLOW_NAME);
   }
 }
@@ -280,11 +307,12 @@ class SignpostingFlow extends BaseFlow {
       const templateVariables =
         this.signpostingTemplates[flowStep]["templateVariables"];
       const templateName = this.signpostingTemplates[flowStep]["templateName"];
-      const templateMessage = createTemplateMessage(
-        this.WaId,
-        templateSid,
-        templateVariables
-      );
+      const templateMessage = createTemplateMessage({
+        waId: this.WaId,
+        contentSid: templateSid,
+        templateVariables,
+        messagingServiceSid: this.messagingServiceSid,
+      });
       const insertedId = await this.saveResponseMessage({
         message: templateMessage,
         flowName: SignpostingFlow.FLOW_NAME,
@@ -347,14 +375,22 @@ class SignpostingFlow extends BaseFlow {
         const response = await llmService.make_llm_request(aiApiRequest);
         const llmResponse = response.data;
         const firstText = "Here are some support options:";
-        const firstMessage = createTextMessage(this.WaId, firstText);
+        const firstMessage = createTextMessage({
+          waId: this.WaId,
+          textContent: firstText,
+          messagingServiceSid: this.messagingServiceSid,
+        });
         await this.saveAndSendTextMessage(
           firstMessage,
           SignpostingFlow.FLOW_NAME
         );
         for (const [index, item] of llmResponse.entries()) {
           console.log("sending message:", item);
-          const message = createTextMessage(this.WaId, item);
+          const message = createTextMessage({
+            waId: this.WaId,
+            textContent: item,
+            messagingServiceSid: this.messagingServiceSid,
+          });
           await this.saveAndSendTextMessage(message, SignpostingFlow.FLOW_NAME);
           if (index === result.length - 1) {
             const { lastMessage, templateName = null } =
@@ -385,29 +421,42 @@ class SignpostingFlow extends BaseFlow {
       const templateVariables = {
         see_more_options_message: "Would you like to see more options?",
       };
-      lastMessage = createTemplateMessage(
-        recipient,
-        templateSid,
-        templateVariables
-      );
+      lastMessage = createTemplateMessage({
+        waId: recipient,
+        contentSid: templateSid,
+        templateVariables,
+        messagingServiceSid: this.messagingServiceSid,
+      });
       searchableTemplateName = templateName;
     } else {
       const text =
         "Thanks for using the service just now, please text 'hi' to search again";
-      lastMessage = createTextMessage(recipient, text);
+      lastMessage = createTextMessage({
+        waId: recipient,
+        textContent: text,
+        messagingServiceSid: this.messagingServiceSid,
+      });
     }
     return { templateName: searchableTemplateName, lastMessage };
   }
   createEndFlowMessage(recipient) {
     const text =
       "Thanks for using the service just now, please text 'hi' to search again";
-    const message = createTextMessage(recipient, text);
+    const message = createTextMessage({
+      waId: recipient,
+      textContent: text,
+      messagingServiceSid: this.messagingServiceSid,
+    });
     return message;
   }
   createNoOptionsMessage(recipient) {
     const text =
       "There seems to be nothing in our database for your search right now, please text 'hi' to start a new search";
-    const message = createTextMessage(recipient, text);
+    const message = createTextMessage({
+      waId: recipient,
+      textContent: text,
+      messagingServiceSid: this.messagingServiceSid,
+    });
     return message;
   }
 }
@@ -419,9 +468,17 @@ class EditDetailsFlow extends BaseFlow {
     userInfo,
     userMessage,
     contactModel,
-    organizationPhoneNumber
+    organizationPhoneNumber,
+    organizationMessagingServiceSid
   ) {
-    super(db, userInfo, userMessage, contactModel, organizationPhoneNumber);
+    super(
+      db,
+      userInfo,
+      userMessage,
+      contactModel,
+      organizationPhoneNumber,
+      organizationMessagingServiceSid
+    );
   }
   async handleFlowStep(flowStep, userDetailUpdate) {
     let flowCompletionStatus = false;
@@ -452,7 +509,11 @@ class EditDetailsFlow extends BaseFlow {
           "organization": `Your organization is currently registered as ${currentValue}, what would you like to your organization to be changed to?`,
         };
         const text = texts[detailField];
-        const message = createTextMessage(this.WaId, text);
+        const message = createTextMessage({
+          waId: this.WaId,
+          textContent: text,
+          messagingServiceSid: this.messagingServiceSid,
+        });
         await this.saveAndSendTextMessage(message, EditDetailsFlow.FLOW_NAME);
       } else {
         if (detailField === "language") {
@@ -508,9 +569,17 @@ class FatMacysSurveyFlow extends BaseFlow {
     userInfo,
     userMessage,
     contactModel,
-    organizationPhoneNumber
+    organizationPhoneNumber,
+    organizationMessagingServiceSid
   ) {
-    super(db, userInfo, userMessage, contactModel, organizationPhoneNumber);
+    super(
+      db,
+      userInfo,
+      userMessage,
+      contactModel,
+      organizationPhoneNumber,
+      organizationMessagingServiceSid
+    );
   }
   async handleFlowStep(flowStep, flowSection, cancelSurvey) {
     let flowCompletionStatus = false;
@@ -549,7 +618,11 @@ class FatMacysSurveyFlow extends BaseFlow {
         await this.updateUser(updateData);
       }
       if (responseType === "text") {
-        const message = createTextMessage(this.WaId, responseContent);
+        const message = createTextMessage({
+          waId: this.WaId,
+          textContent: responseContent,
+          messagingServiceSid: this.messagingServiceSid,
+        });
         await this.saveAndSendTextMessage(
           message,
           FatMacysSurveyFlow.FLOW_NAME
@@ -572,7 +645,11 @@ class FatMacysSurveyFlow extends BaseFlow {
   }
   createCancellationMessage(recipient) {
     const text = "No worries!";
-    const message = createTextMessage(recipient, text);
+    const message = createTextMessage({
+      waId: recipient,
+      textContent: text,
+      messagingServiceSid: this.messagingServiceSid,
+    });
     return message;
   }
 }

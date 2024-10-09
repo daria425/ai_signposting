@@ -38,16 +38,21 @@ class BaseMessageHandler {
     this.res = res;
     this.clientSideTriggered = clientSideTriggered;
   }
-  createMessageData({
+  async createMessageData({
     userData,
     flowName,
     trackedFlowId,
     flowStep,
     flowSection,
   }) {
+    const organizationMessagingServiceSid =
+      await this.databaseService.getMessagingServiceSid(
+        this.organizationPhoneNumber
+      );
     return {
       userInfo: userData,
       organizationPhoneNumber: this.organizationPhoneNumber,
+      organizationMessagingServiceSid,
       message: {
         ...this.body,
         trackedFlowId,
@@ -140,7 +145,7 @@ class MessageHandlerService extends BaseMessageHandler {
       Flow: flowName,
       trackedFlowId: trackedFlowId,
     };
-    const messageData = this.createMessageData({
+    const messageData = await this.createMessageData({
       userData,
       flowName,
       trackedFlowId,
@@ -219,7 +224,7 @@ class MessageHandlerService extends BaseMessageHandler {
       updatedFlowStep += 1;
     }
     console.log("updated flow step", updatedFlowStep);
-    const messageData = this.createMessageData({
+    const messageData = await this.createMessageData({
       userData,
       flowName,
       trackedFlowId: flowId,
@@ -388,7 +393,7 @@ class FlowTriggerService extends BaseMessageHandler {
   }
   async startFlow({ userData, flowName }) {
     const trackedFlowId = uuidv4();
-    const messageData = this.createMessageData({
+    const messageData = await this.createMessageData({
       userData,
       flowName,
       trackedFlowId,

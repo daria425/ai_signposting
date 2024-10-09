@@ -16,6 +16,7 @@ async function runSurveyFlow({
   flowStep,
   userMessage,
   organizationPhoneNumber,
+  organizationMessagingServiceSid,
   cancelSurvey,
   flowSection,
 }) {
@@ -24,7 +25,8 @@ async function runSurveyFlow({
     userInfo,
     userMessage,
     contactModel,
-    organizationPhoneNumber
+    organizationPhoneNumber,
+    organizationMessagingServiceSid
   );
   const flowCompletionStatus = await surveyFlow.handleFlowStep(
     flowStep,
@@ -40,13 +42,15 @@ async function runOnboardingFlow({
   flowStep,
   userMessage,
   organizationPhoneNumber,
+  organizationMessagingServiceSid,
 }) {
   const onboardingFlow = new OnboardingFlow(
     db,
     userInfo,
     userMessage,
     contactModel,
-    organizationPhoneNumber
+    organizationPhoneNumber,
+    organizationMessagingServiceSid
   );
   const flowCompletionStatus = await onboardingFlow.handleFlowStep(flowStep);
   return flowCompletionStatus;
@@ -59,6 +63,7 @@ async function runSignpostingFlow({
   flowStep,
   userMessage,
   organizationPhoneNumber,
+  organizationMessagingServiceSid,
   userSelection,
 }) {
   const signpostingFlow = new SignpostingFlow(
@@ -66,7 +71,8 @@ async function runSignpostingFlow({
     userInfo,
     userMessage,
     contactModel,
-    organizationPhoneNumber
+    organizationPhoneNumber,
+    organizationMessagingServiceSid
   );
   const supportOptionService = new SupportOptionService(db);
   const llmService = new LLMService(api_base);
@@ -106,8 +112,14 @@ async function flowController(req, res, next) {
   const controlRoomDb = req.app.locals.secondaryDb;
   let flowCompletionStatus;
   try {
-    const { userInfo, organizationPhoneNumber, message, flowStep, startTime } =
-      req.body;
+    const {
+      userInfo,
+      organizationPhoneNumber,
+      message,
+      flowStep,
+      startTime,
+      organizationMessagingServiceSid,
+    } = req.body;
     if (process.env.NODE_ENV !== "production") {
       console.log("req body", req.body);
     }
@@ -121,6 +133,7 @@ async function flowController(req, res, next) {
         userInfo,
         flowStep,
         userMessage: message,
+        organizationMessagingServiceSid,
         organizationPhoneNumber,
       });
     } else if (flow === "signposting") {
@@ -132,6 +145,7 @@ async function flowController(req, res, next) {
         flowStep,
         userMessage: message,
         organizationPhoneNumber,
+        organizationMessagingServiceSid,
         userSelection,
       });
     } else if (flow === "edit-details") {
@@ -143,6 +157,7 @@ async function flowController(req, res, next) {
         flowStep,
         userMessage: message,
         organizationPhoneNumber,
+        organizationMessagingServiceSid,
         userDetailUpdate,
       });
     } else if (flow === "survey") {
@@ -155,6 +170,7 @@ async function flowController(req, res, next) {
         flowStep,
         userMessage: message,
         organizationPhoneNumber,
+        organizationMessagingServiceSid,
         cancelSurvey,
         flowSection,
       });
