@@ -153,6 +153,7 @@ class MessageHandlerService extends BaseMessageHandler {
       trackedFlowId,
       flowName,
       clientSideTriggered: this.clientSideTriggered,
+      organizationPhoneNumber: this.organizationPhoneNumber,
     });
     const response = await this.postRequestService.make_request(
       `flows/${flowName}`,
@@ -399,6 +400,7 @@ class FlowTriggerService extends BaseMessageHandler {
       trackedFlowId,
       flowName,
       clientSideTriggered: this.clientSideTriggered,
+      organizationPhoneNumber: this.organizationPhoneNumber,
     });
     //HERE WE DONT SAVE THE MESSAGE BECAUSE IT ISNT AN ACTUAL WHATSAPP MESSAGE
 

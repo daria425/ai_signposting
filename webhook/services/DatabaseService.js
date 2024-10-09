@@ -111,9 +111,15 @@ class DatabaseService {
     }
   }
 
-  async saveFlow({ WaId, trackedFlowId, flowName, clientSideTriggered }) {
+  async saveFlow({
+    WaId,
+    trackedFlowId,
+    flowName,
+    clientSideTriggered,
+    organizationPhoneNumber,
+  }) {
     try {
-      const contact = await this.getUser(WaId);
+      const contact = await this.getUser(WaId, organizationPhoneNumber);
       const newFlowDoc = {
         CreatedAt: new Date(),
         flowName: flowName,
