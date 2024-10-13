@@ -17,7 +17,7 @@ class DatabaseService:
     def close(self):
         self.client.close()
 
-    def update_message_text(self, message_sid, transcription):
+    def update_message_text(self, message_sid, transcription, gcs_uri):
         message_collection=self.db["messages"]
         flow_history_collection=self.db["flow_history"]
         try:
@@ -27,7 +27,10 @@ class DatabaseService:
             },
             {
                 "$set": {
-                    "surveyResponses.$.userResponse": transcription  # Set the new userResponse for the matched element
+                    "surveyResponses.$.userResponse": f"<transcript>{transcription}</transcript>", 
+                    "surveyResponses.$.gcsAudioUri":gcs_uri
+                      
+                          # Set the new userResponse for the matched element
                 }
             })
            print(f"Message {message_sid} body updated to {transcription}")

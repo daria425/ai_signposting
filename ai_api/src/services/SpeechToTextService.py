@@ -56,6 +56,7 @@ class SpeechToTextService:
         blob=self.bucket.blob(destination_blob_name)
         blob.upload_from_filename(file_path)
         gcs_uri = f"gs://{self.bucket_name}/{destination_blob_name}"
+        print(f"file uploaded at {gcs_uri}")
         return gcs_uri
     
     def transcribe_audio(self, gcs_uri):
@@ -80,6 +81,6 @@ class SpeechToTextService:
         gcs_uri=self.upload_to_gcs(file_path)
         transcription=self.transcribe_audio(gcs_uri)
         shutil.rmtree(temp_dir)
-        return transcription
+        return transcription, gcs_uri
     
         

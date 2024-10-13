@@ -11,8 +11,9 @@ def create_transcription(request_body: TranscriptionDataModel, db_service: Datab
     message_sid=request_body.MessageSid
     speech_to_text_service=SpeechToTextService()
     try:
-        transcription=speech_to_text_service.handle_transcription(media_url)
-        db_service.update_message_text(message_sid, transcription)
+        transcription, gcs_uri=speech_to_text_service.handle_transcription(media_url)
+        print(gcs_uri)
+        db_service.update_message_text(message_sid, transcription, gcs_uri)
         return {"message": f"Message updated successfully with {transcription}", "status": 200}
     except errors.PyMongoError as db_error: 
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error in database: {db_error}")
