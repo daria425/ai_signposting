@@ -232,6 +232,9 @@ class MessageHandlerService extends BaseMessageHandler {
       flowSection: 1,
     });
     await this.databaseService.updateFlowStatus(flowId, "in_progress");
+    if (messageData.flowStep === 2 && messageData.flowSection === 1) {
+      await this.databaseService.updateFlowStartTime(flowId);
+    }
     if (flowName === "signposting") {
       messageData.userSelection = await this.updateUserSignpostingSelection(
         flowId,

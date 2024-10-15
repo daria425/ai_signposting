@@ -156,6 +156,16 @@ class DatabaseService {
       }
     );
   }
+  async updateFlowStartTime(flowId) {
+    await this.sentFlowsCollection.findOneAndUpdate(
+      { "trackedFlowId": flowId },
+      {
+        $set: {
+          StartedAt: new Date(),
+        },
+      }
+    );
+  }
   async updateFlowSurvey(flowId, update) {
     await this.sentFlowsCollection.findOneAndUpdate(
       { "trackedFlowId": flowId },
