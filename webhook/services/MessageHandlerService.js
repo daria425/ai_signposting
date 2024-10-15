@@ -18,7 +18,10 @@ const {
 } = require("../config/api_base.config");
 const { DatabaseService } = require("./DatabaseService");
 const { surveyConfig } = require("../config/survey.config");
+const twilio = require("twilio");
 
+// Create a Twilio response object
+const twiml = new twilio.twiml.MessagingResponse();
 class BaseMessageHandler {
   constructor({
     req,
@@ -331,7 +334,8 @@ class MessageHandlerService extends BaseMessageHandler {
         updatedMessageToSave.MessageSid
       );
     }
-    this.res.status(200).send(response.data);
+    console.log(response.data);
+    this.res.status(204).send();
   }
 }
 
