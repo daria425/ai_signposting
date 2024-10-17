@@ -20,6 +20,22 @@ class DatabaseService {
     }
   }
 
+  async updateUser(WaId, organizationPhoneNumber, updateDoc) {
+    try {
+      const contactOrganization = await this.organizationCollection.findOne({
+        "organizationPhoneNumber": organizationPhoneNumber,
+      });
+      const contactOrganizationId = contactOrganization._id;
+      const contact = await this.contactCollection.findOneAndUpdate(
+        { "WaId": WaId, "organizationId": contactOrganizationId },
+        { "$set": updateDoc }
+      );
+      console.log("found contact!!!!!!!", contact);
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
   async updateOrganizationWithContact(organizationNumber, contactId) {
     try {
       await this.organizationCollection.updateOne(

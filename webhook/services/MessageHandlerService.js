@@ -18,10 +18,6 @@ const {
 } = require("../config/api_base.config");
 const { DatabaseService } = require("./DatabaseService");
 const { surveyConfig } = require("../config/survey.config");
-const twilio = require("twilio");
-
-// Create a Twilio response object
-const twiml = new twilio.twiml.MessagingResponse();
 class BaseMessageHandler {
   constructor({
     req,
@@ -93,6 +89,7 @@ class MessageHandlerService extends BaseMessageHandler {
       const organization = await this.databaseService.getOrganization(
         this.organizationPhoneNumber
       );
+      console.log(organization);
       const registeredUser = await this.databaseService.getUser(
         this.body.WaId,
         this.organizationPhoneNumber
@@ -108,7 +105,23 @@ class MessageHandlerService extends BaseMessageHandler {
         Direction: "inbound",
         Status: "recieved",
       };
-      console.log(this.body);
+
+      if (this.body.Body === "OPT-OUT") {
+        await this.databaseService.updateUser(
+          this.body.WaId,
+          this.organizationPhoneNumber,
+          { "opted_in": false }
+        );
+        return this.res.status(204).send();
+      }
+      if (this.body.Body === "OPT-IN") {
+        await this.databaseService.updateUser(
+          this.body.WaId,
+          this.organizationPhoneNumber,
+          { "opted_in": true }
+        );
+        return this.res.status(204).send();
+      }
       if (!registeredUser || this.body.Body === "test") {
         await this.onboardUser(userData, messageToSave);
       } else if (this.isGreeting()) {
@@ -163,7 +176,7 @@ class MessageHandlerService extends BaseMessageHandler {
       clientSideTriggered: this.clientSideTriggered,
       organizationPhoneNumber: this.organizationPhoneNumber,
     });
-    const response = await this.postRequestService.make_request(
+    await this.postRequestService.make_request(
       `flows/${flowName}`,
       messageData
     );
@@ -177,7 +190,7 @@ class MessageHandlerService extends BaseMessageHandler {
         updatedMessageToSave.MessageSid
       );
     }
-    this.res.status(200).send(response.data);
+    this.res.status(204).send();
   }
 
   async onboardUser(userData, messageToSave) {

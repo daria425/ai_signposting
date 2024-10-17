@@ -5,8 +5,6 @@ async function createNewFlow({ db, messageData, extraData }) {
     const { flowName, userInfo, flowStep, message, flowSection } = messageData;
     console.log("firestore recieved", messageData);
     const userId = userInfo.WaId;
-    console.log("reached 1");
-    console.log("firestore:", db);
     const existingFlowSnapshot = await db
       .collection("flows")
       .where("userId", "==", userId)

@@ -88,10 +88,12 @@ const surveyConfig = {
       question: "3C",
     },
     4: {
-      responseContent:
-        "3D) Please complete this sentence using a voice note or text message:\n\n'When I think about my sessions with Lexington, I feel...'",
-      responseType: "text",
-      templateKey: null,
+      responseContent: {
+        templateVariables:
+          "3D) Please complete this sentence using a voice note or text message:\n\n'When I think about my sessions with Lexington, I feel...'",
+      },
+      responseType: "template",
+      templateKey: "survey_3d_image",
       question: "3D",
     },
   },

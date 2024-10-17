@@ -129,7 +129,10 @@ async function flowController(req, res, next) {
       startTime,
       organizationPhoneNumber
     );
-    await contactModel.updateContact(userInfo.WaId, {});
+    if (message.Body === "OPT-OUT") {
+      await contactModel.updateContact(userInfo.WaId, { "opted_in": false });
+      return res.status(200).send({ flowCompletionStatus: true });
+    }
     if (flow === "onboarding") {
       flowCompletionStatus = await runOnboardingFlow({
         db,

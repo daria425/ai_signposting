@@ -21,6 +21,7 @@ const createTemplateMessage = ({
     to: `whatsapp:+${waId}`,
     // messagingServiceSid: messagingServiceSid,
   };
+
   console.log("to save", message);
   return message;
 };
