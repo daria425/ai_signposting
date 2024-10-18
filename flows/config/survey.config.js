@@ -29,7 +29,7 @@ const surveyConfig = {
     1: {
       responseContent: {
         templateVariables:
-          "Great thank you.\n\nSection 2 of 7: Workplace training\n\nWhen answering these questions, think about the training hours you’ve completed in the restaurant or at events at other venues.\n\n2A) Have you completed any training with Fat Macy’s since March 2024?\n\nThis could include your trial sessions or any other sessions contributing to your 200 hours.  This can be at Sohaila, at events, or at the Lexington cafe",
+          "Great thank you.\n\nPlease note you can’t go back and change answers on this survey.\n\nSection 2 of 7: Workplace training\n\nWhen answering these questions, think about the training hours you’ve completed in the restaurant or at events at other venues.\n\n2A) Have you completed any training with Fat Macy’s since March 2024?\n\nThis could include your trial sessions or any other sessions contributing to your 200 hours. This can be at Sohaila, at events, or at the Lexington cafe.",
       },
       responseType: "template",
       templateKey: "survey_2a",
@@ -46,7 +46,7 @@ const surveyConfig = {
     },
     3: {
       responseContent:
-        "2C) Please complete this sentence using a voice note or text message:\n\n'When I think about my training hours with Fat Macy's, I feel...'",
+        "2C) Please complete this sentence. Please answer in one message rather than several messages.\n\n“When I think about my training hours with Fat Macy's, I feel...”",
       responseType: "text",
       templateKey: null,
       question: "2C",
@@ -144,7 +144,7 @@ const surveyConfig = {
     },
     3: {
       responseContent:
-        "5C) Please answer the following using a voice note or text message:\n\n1. What is / was helpful about the application process?\n2. How could we improve the application process?",
+        "5C) Please answer the following:\n\n1. What is / was helpful about the application process?\n2. How could we improve the application process?",
       responseType: "text",
       templateKey: null,
       question: "5C",
@@ -238,7 +238,7 @@ const surveyConfig = {
     4: {
       responseContent: {
         templateVariables:
-          "7D) Please answer the following using a voice note or text message:\n\n1. What has worked well during your time at Fat Macy’s\n2. What hasn’t worked well?\n3.How could we improve the trainee and graduate experience at Fat Macy’s?",
+          "7D) Please answer the following using a voice note or text message:\n\n1. What has worked well during your time at Fat Macy’s\n2. What hasn’t worked well?\n3. How could we improve the trainee and graduate experience at Fat Macy’s?",
         mediaId: "1XeWmd_wMkxhLa0IgOV4CNMKxzLo-q-9c",
       },
       responseType: "template",
