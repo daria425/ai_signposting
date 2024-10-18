@@ -52,10 +52,14 @@ const surveyConfig = {
       question: "2C",
     },
     4: {
-      responseContent:
-        "2D) Thank you for sharing. We often have sessions on the rota which we cannot fill. How could Fat Macy’s support you to complete more hours?\n\nPlease answer using a voice note or text message",
-      responseType: "text",
-      templateKey: null,
+      responseContent: {
+        templateVariables:
+          "2D) Thank you for sharing. We often have sessions on the rota which we cannot fill. How could Fat Macy’s support you to complete more hours?\n\nPlease answer using a voice note or text message",
+        mediaId: "1K0r1c4cPNxmso92yK1IoQbTF4PpXEhAK",
+      },
+
+      responseType: "template",
+      templateKey: "survey_image",
       question: "2D",
     },
   },
@@ -91,9 +95,10 @@ const surveyConfig = {
       responseContent: {
         templateVariables:
           "3D) Please complete this sentence using a voice note or text message:\n\n'When I think about my sessions with Lexington, I feel...'",
+        mediaId: "1ARp3EbkuMqea9heairj8ivmVt4OITEfP",
       },
       responseType: "template",
-      templateKey: "survey_3d_image",
+      templateKey: "survey_image",
       question: "3D",
     },
   },
@@ -108,10 +113,13 @@ const surveyConfig = {
       question: "4A", //is a list cant skip this one
     },
     2: {
-      responseContent:
-        "4B) Please complete this sentence using a voice note or text message:\n\n'When I think about the 1:1 support I've received from Fat Macy's, I feel...'",
-      responseType: "text",
-      templateKey: null,
+      responseContent: {
+        templateVariables:
+          "4B) Please complete this sentence using a voice note or text message:\n\n'When I think about the 1:1 support I've received from Fat Macy's, I feel...'",
+        mediaId: "1rCsPpNKSm4_cUHD7MfC93tC2kMx49XCZ",
+      },
+      responseType: "template",
+      templateKey: "survey_image",
       question: "4B",
     },
   },
@@ -153,10 +161,13 @@ const surveyConfig = {
       question: "6A",
     },
     2: {
-      responseContent:
-        "6B) Please complete this sentence using a voice note or text:\n\n'When I think about the the Fat Macy's team, I feel...'",
-      responseType: "text",
-      templateKey: null,
+      responseContent: {
+        templateVariables:
+          "6B) Please complete this sentence using a voice note or text:\n\n'When I think about the the Fat Macy's team, I feel...'",
+        mediaId: "1U7EoLzonNp6gTnJBCQ54QQz31_VXHbmd",
+      },
+      responseType: "template",
+      templateKey: "survey_image",
       question: "6B",
     },
     3: {
@@ -176,17 +187,23 @@ const surveyConfig = {
       question: "6D",
     },
     5: {
-      responseContent:
-        "6E) Do you read the monthly Fat Macy’s Trainee Newsletter? \n\nREPLY With the Right number.\n\n1: I didn't know there was a newsletter\n\n2: I knew about the newsletter, but I don't ever read it\n\n3: I skim the newsletter, but don't read it in detail\n\n4: I sometimes read the newsletter \n\n5: I always read the newsletter",
-      responseType: "text",
-      templateKey: null,
+      responseContent: {
+        templateVariables:
+          "6E) Do you read the monthly Fat Macy’s Trainee Newsletter? \n\nREPLY With the Right number.\n\n1: I didn't know there was a newsletter\n\n2: I knew about the newsletter, but I don't ever read it\n\n3: I skim the newsletter, but don't read it in detail\n\n4: I sometimes read the newsletter \n\n5: I always read the newsletter",
+        mediaId: "10J7s_-QhG5GvQMdkW7OjrtoUDn2OJ-_3",
+      },
+      responseType: "template",
+      templateKey: "survey_image",
       question: "6E",
     },
     6: {
-      responseContent:
-        "6F) Fat Macy's tries to share stories about our current trainees.\n\nPlease complete this sentence using a voice note or text message:\n\n'When I read/hear stories about other trainees' successes, I feel...'",
-      responseType: "text",
-      templateKey: null,
+      responseContent: {
+        templateVariables:
+          "6F) Fat Macy's tries to share stories about our current trainees.\n\nPlease complete this sentence using a voice note or text message:\n\n'When I read/hear stories about other trainees' successes, I feel...'",
+        mediaId: "1eQ1neemWT0-mZMMn-PqY63IarZXWC_89",
+      },
+      responseType: "template",
+      templateKey: "survey_image",
       question: "6F",
     },
   },
@@ -219,10 +236,13 @@ const surveyConfig = {
       question: "7C",
     },
     4: {
-      responseContent:
-        "7D) Please answer the following using a voice note or text message:\n\n1. What has worked well during your time at Fat Macy’s\n2. What hasn’t worked well?\n3.How could we improve the trainee and graduate experience at Fat Macy’s?",
-      responseType: "text",
-      templateKey: null,
+      responseContent: {
+        templateVariables:
+          "7D) Please answer the following using a voice note or text message:\n\n1. What has worked well during your time at Fat Macy’s\n2. What hasn’t worked well?\n3.How could we improve the trainee and graduate experience at Fat Macy’s?",
+        mediaId: "1XeWmd_wMkxhLa0IgOV4CNMKxzLo-q-9c",
+      },
+      responseType: "template",
+      templateKey: "survey_image",
       question: "7D",
     },
     5: {
@@ -235,10 +255,13 @@ const surveyConfig = {
       question: "7E",
     },
     6: {
-      responseContent:
-        "Thanks so much for completing this survey!\n\nYour feedback is really appreciated.  It's really important that we listen to what you have to share 🥰 \n\nWe will share the results of the survey and the changes we will make at Fat Macy's in November.\n\nGet in touch if there is anything we can help with!",
-      responseType: "text",
-      templateKey: null,
+      responseContent: {
+        templateVariables:
+          "Thanks so much for completing this survey!\n\nYour feedback is really appreciated.  It's really important that we listen to what you have to share 🥰 \n\nWe will share the results of the survey and the changes we will make at Fat Macy's in November.\n\nGet in touch if there is anything we can help with!",
+        mediaId: "1zSM-zzZn1BBs2J5uysbWZhJsz2kNxnHZ",
+      },
+      responseType: "template",
+      templateKey: "survey_image",
     },
   },
 };
