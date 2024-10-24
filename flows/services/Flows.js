@@ -241,9 +241,17 @@ class SignpostingFlow extends BaseFlow {
     userInfo,
     userMessage,
     contactModel,
-    organizationPhoneNumber
+    organizationPhoneNumber,
+    organizationMessagingServiceSid
   ) {
-    super(db, userInfo, userMessage, contactModel, organizationPhoneNumber);
+    super(
+      db,
+      userInfo,
+      userMessage,
+      contactModel,
+      organizationPhoneNumber,
+      organizationMessagingServiceSid
+    );
     this.signpostingTemplates = {};
   }
   async init() {

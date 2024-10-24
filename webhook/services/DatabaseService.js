@@ -62,6 +62,11 @@ class DatabaseService {
         {
           $unwind: "$contactInfo",
         },
+        {
+          $match: {
+            "$contactInfo.reminderSent": { $exists: false },
+          },
+        },
       ])
       .toArray();
     const WaIds = unansweredSurveys.map((survey) => ({
